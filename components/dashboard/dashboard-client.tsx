@@ -11,6 +11,7 @@ import { TaskList } from './task-list'
 import { GardenLog } from './garden-log'
 import { ServiceProviders } from './service-providers'
 import { ActiveCrops } from './active-crops'
+import { NotificationSettings } from './notification-settings'
 import { getProfile, type MomProfile } from '@/lib/profile-store'
 import { 
   Sprout, 
@@ -24,7 +25,8 @@ import {
   Flower2,
   Settings,
   Sun,
-  Droplets
+  Droplets,
+  Bell
 } from 'lucide-react'
 import type { Plant } from '@/lib/types'
 
@@ -102,7 +104,7 @@ export function DashboardClient({ plants }: DashboardClientProps) {
 
         {/* Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="w-full grid grid-cols-5 h-auto bg-muted/50 p-1 rounded-xl">
+          <TabsList className="w-full grid grid-cols-6 h-auto bg-muted/50 p-1 rounded-xl">
             <TabsTrigger 
               value="home" 
               className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-background rounded-lg"
@@ -130,6 +132,13 @@ export function DashboardClient({ plants }: DashboardClientProps) {
             >
               <BookHeart className="h-5 w-5" />
               <span className="text-xs">Log</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="alerts" 
+              className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-background rounded-lg"
+            >
+              <Bell className="h-5 w-5" />
+              <span className="text-xs">Alerts</span>
             </TabsTrigger>
             <TabsTrigger 
               value="local" 
@@ -252,6 +261,11 @@ export function DashboardClient({ plants }: DashboardClientProps) {
           {/* LOG TAB */}
           <TabsContent value="log" className="mt-6">
             <GardenLog />
+          </TabsContent>
+
+          {/* ALERTS TAB */}
+          <TabsContent value="alerts" className="mt-6">
+            <NotificationSettings />
           </TabsContent>
 
           {/* LOCAL PROS TAB */}
