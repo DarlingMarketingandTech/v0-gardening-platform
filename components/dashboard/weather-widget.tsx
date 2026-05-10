@@ -113,29 +113,21 @@ function calculateWateringScore(precipitation: number, temp: number, humidity: n
   return Math.max(0, Math.min(100, Math.round(score)))
 }
 
-export function WeatherWidget() {
+interface WeatherWidgetProps {
+  latitude?: number | null
+  longitude?: number | null
+  locationName?: string
+}
+
+export function WeatherWidget({ latitude, longitude, locationName }: WeatherWidgetProps) {
   const [weather, setWeather] = useState<WeatherData | null>(null)
   const [sunData, setSunData] = useState<SunData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [location, setLocation] = useState({ lat: 40.7128, lng: -74.006 }) // Default NYC
-
-  useEffect(() => {
-    // Try to get user's location
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          setLocation({
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          })
-        },
-        () => {
-          // Use default location if geolocation fails
-        }
-      )
-    }
-  }, [])
+  
+  // Use provided coordinates or default
+  const lat = latitude || 40.7128
+  const lng = longitude || -74.006
 
   useEffect(() => {
     async function fetchWeather() {
@@ -144,13 +136,13 @@ export function WeatherWidget() {
         
         // Fetch weather from Open-Meteo
         const weatherRes = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${location.lat}&longitude=${location.lng}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`
+          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`
         )
         const weatherData = await weatherRes.json()
 
         // Fetch sunrise/sunset data
         const sunRes = await fetch(
-          `https://api.sunrise-sunset.org/json?lat=${location.lat}&lng=${location.lng}&formatted=0`
+          `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lng}&formatted=0`
         )
         const sunJson = await sunRes.json()
 
@@ -196,7 +188,7 @@ export function WeatherWidget() {
     }
 
     fetchWeather()
-  }, [location])
+  }, [lat, lng])
 
   if (loading) {
     return (
