@@ -10,6 +10,11 @@ import { PlantLibrary } from './plant-library'
 import { TaskList } from './task-list'
 import { GardenLog } from './garden-log'
 import { ServiceProviders } from './service-providers'
+import { ActiveCrops } from './active-crops'
+import { NotificationSettings } from './notification-settings'
+import { MoonPhaseWidget } from './moon-phase-widget'
+import { SeedInventory } from './seed-inventory'
+import { PestLookup } from './pest-lookup'
 import { getProfile, type MomProfile } from '@/lib/profile-store'
 import { 
   Sprout, 
@@ -23,7 +28,9 @@ import {
   Flower2,
   Settings,
   Sun,
-  Droplets
+  Droplets,
+  Bell,
+  Package
 } from 'lucide-react'
 import type { Plant } from '@/lib/types'
 
@@ -101,41 +108,55 @@ export function DashboardClient({ plants }: DashboardClientProps) {
 
         {/* Tab Navigation */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="w-full grid grid-cols-5 h-auto bg-muted/50 p-1 rounded-xl">
+          <TabsList className="w-full grid grid-cols-7 h-auto bg-muted/50 p-1 rounded-xl">
             <TabsTrigger 
               value="home" 
-              className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-background rounded-lg"
+              className="flex flex-col items-center gap-0.5 py-2 px-1 data-[state=active]:bg-background rounded-lg"
             >
-              <Home className="h-5 w-5" />
-              <span className="text-xs">Home</span>
+              <Home className="h-4 w-4" />
+              <span className="text-[10px]">Home</span>
             </TabsTrigger>
             <TabsTrigger 
               value="plants" 
-              className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-background rounded-lg"
+              className="flex flex-col items-center gap-0.5 py-2 px-1 data-[state=active]:bg-background rounded-lg"
             >
-              <BookOpen className="h-5 w-5" />
-              <span className="text-xs">Plants</span>
+              <BookOpen className="h-4 w-4" />
+              <span className="text-[10px]">Plants</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="seeds" 
+              className="flex flex-col items-center gap-0.5 py-2 px-1 data-[state=active]:bg-background rounded-lg"
+            >
+              <Package className="h-4 w-4" />
+              <span className="text-[10px]">Seeds</span>
             </TabsTrigger>
             <TabsTrigger 
               value="tasks" 
-              className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-background rounded-lg"
+              className="flex flex-col items-center gap-0.5 py-2 px-1 data-[state=active]:bg-background rounded-lg"
             >
-              <CheckSquare className="h-5 w-5" />
-              <span className="text-xs">Tasks</span>
+              <CheckSquare className="h-4 w-4" />
+              <span className="text-[10px]">Tasks</span>
             </TabsTrigger>
             <TabsTrigger 
               value="log" 
-              className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-background rounded-lg"
+              className="flex flex-col items-center gap-0.5 py-2 px-1 data-[state=active]:bg-background rounded-lg"
             >
-              <BookHeart className="h-5 w-5" />
-              <span className="text-xs">Log</span>
+              <BookHeart className="h-4 w-4" />
+              <span className="text-[10px]">Log</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="alerts" 
+              className="flex flex-col items-center gap-0.5 py-2 px-1 data-[state=active]:bg-background rounded-lg"
+            >
+              <Bell className="h-4 w-4" />
+              <span className="text-[10px]">Alerts</span>
             </TabsTrigger>
             <TabsTrigger 
               value="local" 
-              className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-background rounded-lg"
+              className="flex flex-col items-center gap-0.5 py-2 px-1 data-[state=active]:bg-background rounded-lg"
             >
-              <MapPin className="h-5 w-5" />
-              <span className="text-xs">Local</span>
+              <MapPin className="h-4 w-4" />
+              <span className="text-[10px]">Local</span>
             </TabsTrigger>
           </TabsList>
 
@@ -155,12 +176,17 @@ export function DashboardClient({ plants }: DashboardClientProps) {
               </div>
             </div>
 
-            {/* Weather Widget - Full Width */}
-            <WeatherWidget 
-              latitude={profile?.latitude || null} 
-              longitude={profile?.longitude || null}
-              locationName={profile?.city ? `${profile.city}, ${profile.state}` : undefined}
-            />
+            {/* Weather & Moon Phase Row */}
+            <div className="grid lg:grid-cols-3 gap-4">
+              <div className="lg:col-span-2">
+                <WeatherWidget 
+                  latitude={profile?.latitude || null} 
+                  longitude={profile?.longitude || null}
+                  locationName={profile?.city ? `${profile.city}, ${profile.state}` : undefined}
+                />
+              </div>
+              <MoonPhaseWidget />
+            </div>
 
             {/* Quick Stats */}
             <div className="grid grid-cols-3 gap-3">
@@ -233,11 +259,19 @@ export function DashboardClient({ plants }: DashboardClientProps) {
                 <TaskList isRainy={isRainy} compact />
               </CardContent>
             </Card>
+
+            {/* Active Crops Section */}
+            <ActiveCrops />
           </TabsContent>
 
           {/* PLANTS TAB */}
           <TabsContent value="plants" className="mt-6">
             <PlantLibrary plants={plants} />
+          </TabsContent>
+
+          {/* SEEDS TAB */}
+          <TabsContent value="seeds" className="mt-6">
+            <SeedInventory />
           </TabsContent>
 
           {/* TASKS TAB */}
@@ -246,8 +280,14 @@ export function DashboardClient({ plants }: DashboardClientProps) {
           </TabsContent>
 
           {/* LOG TAB */}
-          <TabsContent value="log" className="mt-6">
+          <TabsContent value="log" className="mt-6 space-y-6">
+            <PestLookup />
             <GardenLog />
+          </TabsContent>
+
+          {/* ALERTS TAB */}
+          <TabsContent value="alerts" className="mt-6">
+            <NotificationSettings />
           </TabsContent>
 
           {/* LOCAL PROS TAB */}
