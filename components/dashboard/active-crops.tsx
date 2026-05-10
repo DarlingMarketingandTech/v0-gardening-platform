@@ -25,10 +25,12 @@ import {
   Heart,
   AlertTriangle,
   Users,
-  Apple
+  Apple,
+  Star
 } from 'lucide-react'
 import { getCompanionInfo, checkCompatibility } from '@/lib/companion-planting'
 import { triggerHarvestConfetti } from '@/lib/confetti'
+import { getPlantTips, isInPeakFlavorWindow } from '@/lib/plant-tips'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -250,8 +252,24 @@ function GrowthProgressCard({ crop, allCrops, onDelete, onArchive, onAddNote, on
     }
   }
 
+  // Get plant tips for this crop
+  const plantTips = getPlantTips(crop.name)
+  const isPeakFlavor = isInPeakFlavorWindow(progress)
+
   return (
-    <Card className="overflow-hidden border-primary/10 hover:shadow-lg transition-shadow duration-300">
+    <Card className={`overflow-hidden border-primary/10 hover:shadow-lg transition-shadow duration-300 ${
+      isPeakFlavor ? 'ring-2 ring-amber-400/60 shadow-amber-100 dark:shadow-amber-900/20' : ''
+    }`}>
+      {/* Peak Flavor Badge */}
+      {isPeakFlavor && (
+        <div className="absolute top-2 left-2 z-10">
+          <Badge className="bg-gradient-to-r from-amber-400 to-yellow-500 text-amber-950 border-0 shadow-md">
+            <Star className="h-3 w-3 mr-1 fill-current" />
+            Peak Flavor
+          </Badge>
+        </div>
+      )}
+      
       {/* Header with Image */}
       <div className="relative h-32 bg-gradient-to-br from-primary/20 to-accent/20">
         {crop.imageUrl && (
@@ -350,6 +368,32 @@ function GrowthProgressCard({ crop, allCrops, onDelete, onArchive, onAddNote, on
                 day: 'numeric' 
               })}
             </p>
+          </div>
+        </div>
+
+        {/* Momma D's Best Results Tip */}
+        <div className={`p-3 rounded-lg mb-4 border ${
+          isPeakFlavor 
+            ? 'bg-gradient-to-r from-amber-50 to-yellow-50 dark:from-amber-950/30 dark:to-yellow-950/30 border-amber-300 dark:border-amber-700 shadow-sm' 
+            : 'bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/50 dark:border-amber-800/30'
+        }`}>
+          <div className="flex items-start gap-2.5">
+            <div className={`p-1.5 rounded-full ${isPeakFlavor ? 'bg-amber-200 dark:bg-amber-800' : 'bg-amber-100 dark:bg-amber-900/50'}`}>
+              <Lightbulb className={`h-4 w-4 ${isPeakFlavor ? 'text-amber-600 dark:text-amber-400' : 'text-amber-500 dark:text-amber-500'}`} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className={`text-xs font-semibold mb-1 ${isPeakFlavor ? 'text-amber-700 dark:text-amber-400' : 'text-amber-600 dark:text-amber-500'}`}>
+                Momma D&apos;s Best Results
+              </p>
+              <p className="text-sm text-foreground leading-relaxed">
+                {plantTips.best_results_tip}
+              </p>
+              {isPeakFlavor && plantTips.harvest_tip && (
+                <p className="text-sm text-amber-700 dark:text-amber-400 mt-2 font-medium">
+                  Harvest tip: {plantTips.harvest_tip}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 

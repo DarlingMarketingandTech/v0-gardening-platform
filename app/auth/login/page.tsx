@@ -45,11 +45,11 @@ export default function LoginPage() {
         <CardHeader className="text-center">
           <Link href="/" className="flex items-center justify-center gap-2 mb-4">
             <Leaf className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">GreenThumb</span>
+            <span className="text-2xl font-bold">Momma D&apos;s Garden</span>
           </Link>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
           <CardDescription>
-            Sign in to your account to continue gardening
+            Sign in to your garden
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>

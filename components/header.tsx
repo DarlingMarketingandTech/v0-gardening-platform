@@ -1,8 +1,10 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,28 +12,35 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
-import { Avatar, AvatarFallback } from '@/components/ui/avatar'
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { Leaf, Menu, User, LogOut, Settings, LayoutDashboard } from 'lucide-react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { Leaf, Menu, Settings, LogOut, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 const navLinks = [
-  { href: '/plants', label: 'Plant Database' },
-  { href: '/gardens', label: 'My Gardens' },
-  { href: '/planner', label: 'Planner' },
+  { href: '/dashboard', label: 'Dashboard' },
+  { href: '/plants', label: 'Plants' },
+  { href: '/gardens', label: 'Gardens' },
 ]
 
 interface HeaderProps {
-  user: SupabaseUser | null
+  user?: any
 }
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user: initialUser }: HeaderProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const [user, setUser] = useState<SupabaseUser | null>(initialUser ?? null)
   const supabase = createClient()
+
+  useEffect(() => {
+    // Sync session on mount and on auth state changes
+    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
 
   const handleSignOut = async () => {
     await supabase.auth.signOut()
@@ -39,15 +48,17 @@ export function Header({ user }: HeaderProps) {
     router.refresh()
   }
 
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Account'
+
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4">
         <div className="flex items-center gap-6">
           <Link href="/" className="flex items-center gap-2">
             <Leaf className="h-6 w-6 text-primary" />
-            <span className="text-xl font-semibold text-foreground">GreenThumb</span>
+            <span className="text-xl font-semibold text-foreground hidden sm:inline">Momma D&apos;s Garden</span>
           </Link>
-          
+
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
@@ -68,57 +79,37 @@ export function Header({ user }: HeaderProps) {
 
         <div className="flex items-center gap-2">
           {user ? (
-            <>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                    <Avatar className="h-9 w-9">
-                      <AvatarFallback className="bg-primary/10 text-primary">
-                        {user.email?.charAt(0).toUpperCase() || 'U'}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end">
-                  <div className="flex items-center justify-start gap-2 p-2">
-                    <div className="flex flex-col space-y-1 leading-none">
-                      <p className="font-medium text-sm">{user.email}</p>
-                    </div>
-                  </div>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem asChild>
-                    <Link href="/dashboard" className="flex items-center">
-                      <LayoutDashboard className="mr-2 h-4 w-4" />
-                      Dashboard
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/profile" className="flex items-center">
-                      <User className="mr-2 h-4 w-4" />
-                      Profile
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem asChild>
-                    <Link href="/settings" className="flex items-center">
-                      <Settings className="mr-2 h-4 w-4" />
-                      Settings
-                    </Link>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Sign out
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="hidden sm:flex gap-2">
+                  <User className="h-4 w-4" />
+                  <span className="max-w-[120px] truncate">{displayName}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link href="/settings" className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="text-destructive focus:text-destructive flex items-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           ) : (
-            <div className="hidden md:flex items-center gap-2">
-              <Button variant="ghost" asChild>
+            <div className="hidden sm:flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild>
                 <Link href="/auth/login">Sign in</Link>
               </Button>
-              <Button asChild>
-                <Link href="/auth/sign-up">Get Started</Link>
+              <Button size="sm" asChild>
+                <Link href="/auth/sign-up">Sign up</Link>
               </Button>
             </div>
           )}
@@ -147,14 +138,31 @@ export function Header({ user }: HeaderProps) {
                     {link.label}
                   </Link>
                 ))}
-                {!user && (
+                <hr className="my-2" />
+                {user ? (
                   <>
-                    <hr className="my-2" />
+                    <Link href="/settings">
+                      <Button variant="outline" className="w-full justify-start">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-destructive"
+                      onClick={handleSignOut}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign out
+                    </Button>
+                  </>
+                ) : (
+                  <>
                     <Link href="/auth/login">
                       <Button variant="outline" className="w-full">Sign in</Button>
                     </Link>
                     <Link href="/auth/sign-up">
-                      <Button className="w-full">Get Started</Button>
+                      <Button className="w-full">Sign up</Button>
                     </Link>
                   </>
                 )}

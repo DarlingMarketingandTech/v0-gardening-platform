@@ -3,7 +3,6 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
@@ -15,56 +14,61 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { ArrowLeft, Loader2 } from 'lucide-react'
 import { toast } from 'sonner'
+import type { Garden } from '@/lib/types'
 
 export default function NewGardenPage() {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
-  const [gardenType, setGardenType] = useState('')
+  const [gardenType, setGardenType] = useState<'raised_bed' | 'container' | 'in_ground' | 'greenhouse' | 'balcony' | 'indoor' | ''>('')
   const [sizeSqft, setSizeSqft] = useState('')
   const [location, setLocation] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
 
-    const { data: { user } } = await supabase.auth.getUser()
-    
-    if (!user) {
-      setError('You must be logged in to create a garden')
-      setLoading(false)
-      return
-    }
+    try {
+      // Load existing gardens from localStorage
+      const savedGardens = localStorage.getItem('mommaGardens')
+      const gardens = savedGardens ? JSON.parse(savedGardens) : []
 
-    const { error: insertError } = await supabase
-      .from('gardens')
-      .insert({
-        user_id: user.id,
+      // Create new garden
+      if (!gardenType) {
+        setError('Please select a garden type')
+        setLoading(false)
+        return
+      }
+
+      const newGarden: Garden = {
+        id: Date.now().toString(),
         name,
-        description: description || null,
-        garden_type: gardenType,
+        description: description || '',
+        garden_type: gardenType as 'raised_bed' | 'container' | 'in_ground' | 'greenhouse' | 'balcony' | 'indoor',
         size_sqft: sizeSqft ? parseFloat(sizeSqft) : null,
-        location: location || null,
-      })
+        location: location || '',
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      }
 
-    if (insertError) {
-      setError(insertError.message)
+      gardens.push(newGarden)
+      localStorage.setItem('mommaGardens', JSON.stringify(gardens))
+
+      toast.success('Garden created successfully!')
+      router.push('/gardens')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Failed to create garden')
+    } finally {
       setLoading(false)
-      return
     }
-
-    toast.success('Garden created successfully!')
-    router.push('/gardens')
-    router.refresh()
   }
 
   return (
     <div className="min-h-screen flex flex-col">
-      <HeaderWrapper />
+      <Header />
       
       <main className="flex-1 container px-4 py-8 max-w-2xl">
         <Link 
@@ -104,7 +108,7 @@ export default function NewGardenPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="gardenType">Garden Type *</Label>
-                <Select value={gardenType} onValueChange={setGardenType} required>
+                <Select value={gardenType} onValueChange={(value: any) => setGardenType(value)} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Select garden type" />
                   </SelectTrigger>
@@ -175,8 +179,4 @@ export default function NewGardenPage() {
       <Footer />
     </div>
   )
-}
-
-function HeaderWrapper() {
-  return <Header user={null} />
 }
