@@ -51,24 +51,31 @@ const defaultEntries: LogEntry[] = [
   {
     id: '1',
     date: new Date(Date.now() - 86400000).toISOString(),
-    note: 'Tomatoes are starting to ripen! Noticed some yellowing on the lower leaves - might need to check for early blight.',
-    photos: [],
-    type: 'general',
-    pestAlert: true
+    note: 'Banana peppers are looking great! Almost ready to harvest. The plants are really thriving in the full sun spot by the house.',
+    photos: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20230706_185416-Iafs9Siq1WdrKnmdJhVyIscMoe5hhW.jpg'],
+    type: 'harvest',
+    pestAlert: false
   },
   {
     id: '2',
     date: new Date(Date.now() - 172800000).toISOString(),
-    note: 'Deep watered all the raised beds. Added mulch around the peppers to help retain moisture.',
-    photos: [],
-    type: 'watering'
+    note: 'The squash is taking over the trellis! Had to train some vines to grow upward. Beautiful yellow flowers appearing.',
+    photos: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20220618_180911-PBDTHZW4x1HiwJrf0Vqz8sEWuvlZ2P.jpg'],
+    type: 'general'
   },
   {
     id: '3',
     date: new Date(Date.now() - 259200000).toISOString(),
-    note: 'Planted new batch of lettuce seeds for fall harvest. Moved potted herbs to partial shade.',
-    photos: [],
+    note: 'Spring planting is done! Tomatoes, peppers, and herbs all set up with their cages. Chives looking beautiful.',
+    photos: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20230516_180831-vbTH4ec67CfLJIdGv2YjtQMBEQ5Qea.jpg'],
     type: 'planting'
+  },
+  {
+    id: '4',
+    date: new Date(Date.now() - 604800000).toISOString(),
+    note: 'What a gorgeous sunrise this morning! The backyard garden is peaceful at this hour. Perfect time for watering.',
+    photos: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20240716_062946-AC71Knsy1Bx0AOanquS95W8IzISrOf.jpg'],
+    type: 'weather'
   }
 ]
 
@@ -328,12 +335,22 @@ export function GardenLog() {
                       {entry.photos.length > 0 && (
                         <div className="flex gap-2 mt-3">
                           {entry.photos.map((photo, i) => (
-                            <img
-                              key={i}
-                              src={photo}
-                              alt={`Log photo ${i + 1}`}
-                              className="h-16 w-16 object-cover rounded-lg"
-                            />
+                            <Dialog key={i}>
+                              <DialogTrigger asChild>
+                                <img
+                                  src={photo}
+                                  alt={`Log photo ${i + 1}`}
+                                  className="h-24 w-32 object-cover rounded-lg cursor-pointer hover:opacity-90 transition-opacity"
+                                />
+                              </DialogTrigger>
+                              <DialogContent className="max-w-3xl p-0 overflow-hidden">
+                                <img
+                                  src={photo}
+                                  alt={`Log photo ${i + 1}`}
+                                  className="w-full h-auto"
+                                />
+                              </DialogContent>
+                            </Dialog>
                           ))}
                         </div>
                       )}

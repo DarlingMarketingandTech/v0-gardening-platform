@@ -33,7 +33,16 @@ export default function HomePage() {
     <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-accent/10">
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 md:py-32">
-        <div className="container px-4">
+        {/* Background Image - Sunset over the garden */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-20"
+          style={{
+            backgroundImage: `url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20240716_062946-AC71Knsy1Bx0AOanquS95W8IzISrOf.jpg')`
+          }}
+        />
+        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background" />
+        
+        <div className="container px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">
               <Flower2 className="h-10 w-10 text-primary" />
@@ -73,6 +82,47 @@ export default function HomePage() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               )}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Garden Photo Showcase */}
+      <section className="py-12 px-4 bg-accent/20">
+        <div className="max-w-5xl mx-auto">
+          <h2 className="text-2xl font-bold text-center mb-8">From the Garden</h2>
+          <div className="grid md:grid-cols-3 gap-4">
+            {/* Raised bed with trellis */}
+            <div className="relative aspect-[4/3] rounded-xl overflow-hidden shadow-lg group">
+              <img 
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20220618_180911-PBDTHZW4x1HiwJrf0Vqz8sEWuvlZ2P.jpg"
+                alt="Raised bed garden with squash growing on a wooden trellis"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              <span className="absolute bottom-3 left-3 text-white text-sm font-medium">Summer Squash</span>
+            </div>
+            
+            {/* Garden with tomato cages */}
+            <div className="relative aspect-[4/3] rounded-xl overflow-hidden shadow-lg group">
+              <img 
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20230516_180831-vbTH4ec67CfLJIdGv2YjtQMBEQ5Qea.jpg"
+                alt="Garden bed with colorful tomato cages and herbs"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              <span className="absolute bottom-3 left-3 text-white text-sm font-medium">Spring Planting</span>
+            </div>
+            
+            {/* Banana peppers */}
+            <div className="relative aspect-[4/3] rounded-xl overflow-hidden shadow-lg group">
+              <img 
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20230706_185416-Iafs9Siq1WdrKnmdJhVyIscMoe5hhW.jpg"
+                alt="Banana peppers ripening on the vine"
+                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
+              <span className="absolute bottom-3 left-3 text-white text-sm font-medium">Banana Peppers</span>
             </div>
           </div>
         </div>

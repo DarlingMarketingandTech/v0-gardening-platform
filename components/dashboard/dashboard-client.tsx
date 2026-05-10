@@ -141,6 +141,20 @@ export function DashboardClient({ plants }: DashboardClientProps) {
 
           {/* HOME TAB */}
           <TabsContent value="home" className="space-y-6 mt-6">
+            {/* Featured Garden Photo */}
+            <div className="relative h-48 md:h-56 rounded-2xl overflow-hidden shadow-lg">
+              <img 
+                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20220618_180911-PBDTHZW4x1HiwJrf0Vqz8sEWuvlZ2P.jpg"
+                alt="Garden with squash growing on trellis"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              <div className="absolute bottom-4 left-4 right-4">
+                <p className="text-white/80 text-sm">Your Garden</p>
+                <h3 className="text-white text-xl font-semibold">{profile?.gardenName || "Mom's Garden"}</h3>
+              </div>
+            </div>
+
             {/* Weather Widget - Full Width */}
             <WeatherWidget 
               latitude={profile?.latitude || null} 

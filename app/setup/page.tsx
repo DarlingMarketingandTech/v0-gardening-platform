@@ -83,12 +83,26 @@ export default function SetupPage() {
   const canComplete = canProceedStep1 && canProceedStep2
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-accent/10 flex items-center justify-center p-4">
-      <div className="w-full max-w-lg">
+    <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-accent/10 flex items-center justify-center p-4 relative">
+      {/* Background garden image */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-15"
+        style={{
+          backgroundImage: `url('https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20230516_180831-vbTH4ec67CfLJIdGv2YjtQMBEQ5Qea.jpg')`
+        }}
+      />
+      <div className="absolute inset-0 bg-gradient-to-b from-background/90 via-background/80 to-background/90" />
+      
+      <div className="w-full max-w-lg relative z-10">
         {/* Welcome Header */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-            <Flower2 className="w-8 h-8 text-primary" />
+          {/* Small garden preview */}
+          <div className="w-20 h-20 mx-auto rounded-full overflow-hidden border-4 border-primary/20 shadow-lg mb-4">
+            <img 
+              src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20230706_185416-Iafs9Siq1WdrKnmdJhVyIscMoe5hhW.jpg"
+              alt="Garden peppers"
+              className="w-full h-full object-cover"
+            />
           </div>
           <h1 className="text-3xl font-bold text-foreground mb-2">
             Welcome to Momma D&apos;s Garden
