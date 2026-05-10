@@ -11,6 +11,7 @@ export interface MomProfile {
   timezone: string
   gardenName: string
   experienceLevel: 'beginner' | 'intermediate' | 'advanced'
+  climateZone?: string
   setupComplete: boolean
 }
 
@@ -25,6 +26,7 @@ const DEFAULT_PROFILE: MomProfile = {
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   gardenName: "Mom's Garden",
   experienceLevel: 'beginner',
+  climateZone: undefined,
   setupComplete: false,
 }
 

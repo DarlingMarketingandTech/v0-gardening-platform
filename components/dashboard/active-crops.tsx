@@ -21,8 +21,14 @@ import {
   Plus,
   Leaf,
   Droplets,
-  Sun
+  Sun,
+  Heart,
+  AlertTriangle,
+  Users,
+  Apple
 } from 'lucide-react'
+import { getCompanionInfo, checkCompatibility } from '@/lib/companion-planting'
+import { triggerHarvestConfetti } from '@/lib/confetti'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -169,8 +175,9 @@ function CircularProgress({ progress, size = 80, strokeWidth = 6 }: { progress: 
   )
 }
 
-function GrowthProgressCard({ crop, onDelete, onArchive, onAddNote, onAddPhoto }: {
+function GrowthProgressCard({ crop, allCrops, onDelete, onArchive, onAddNote, onAddPhoto }: {
   crop: ActiveCrop
+  allCrops: ActiveCrop[]
   onDelete: (id: string) => void
   onArchive: (id: string) => void
   onAddNote: (id: string, note: string) => void
@@ -366,6 +373,54 @@ function GrowthProgressCard({ crop, onDelete, onArchive, onAddNote, onAddPhoto }
           </Badge>
         </div>
 
+        {/* Buddies - Companion Planting */}
+        {(() => {
+          const companions = getCompanionInfo(crop.name)
+          const otherCrops = allCrops.filter(c => c.id !== crop.id)
+          const goodBuddies: string[] = []
+          const badNeighbors: string[] = []
+          
+          otherCrops.forEach(other => {
+            const compatibility = checkCompatibility(crop.name, other.name)
+            if (compatibility === 'good') goodBuddies.push(other.name)
+            if (compatibility === 'bad') badNeighbors.push(other.name)
+          })
+          
+          if (goodBuddies.length === 0 && badNeighbors.length === 0 && !companions) return null
+          
+          return (
+            <div className="mb-4 p-2.5 rounded-lg bg-muted/30 border border-border/50">
+              <div className="flex items-center gap-1.5 mb-2">
+                <Users className="h-3.5 w-3.5 text-muted-foreground" />
+                <span className="text-xs font-medium">Garden Buddies</span>
+              </div>
+              <div className="space-y-1.5">
+                {goodBuddies.length > 0 && (
+                  <div className="flex items-start gap-1.5">
+                    <Heart className="h-3 w-3 text-green-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-green-700 dark:text-green-400">
+                      <span className="font-medium">Good companions:</span> {goodBuddies.join(', ')}
+                    </p>
+                  </div>
+                )}
+                {badNeighbors.length > 0 && (
+                  <div className="flex items-start gap-1.5">
+                    <AlertTriangle className="h-3 w-3 text-amber-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-amber-700 dark:text-amber-400">
+                      <span className="font-medium">Watch out:</span> {badNeighbors.join(', ')} nearby
+                    </p>
+                  </div>
+                )}
+                {goodBuddies.length === 0 && badNeighbors.length === 0 && companions && (
+                  <p className="text-xs text-muted-foreground">
+                    Grows well with: {companions.goodCompanions.slice(0, 3).join(', ')}
+                  </p>
+                )}
+              </div>
+            </div>
+          )
+        })()}
+
         {/* Quick Actions */}
         <div className="flex gap-2 mb-4">
           <Dialog>
@@ -502,10 +557,22 @@ export function ActiveCrops() {
             {crops.length} plants growing in your garden
           </p>
         </div>
-        <Button onClick={() => setShowAddCrop(true)} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add Crop
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={() => {
+              triggerHarvestConfetti()
+            }} 
+            className="gap-2 bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200 text-amber-700 hover:from-amber-100 hover:to-orange-100 dark:from-amber-950/30 dark:to-orange-950/30 dark:border-amber-800 dark:text-amber-400"
+          >
+            <Apple className="h-4 w-4" />
+            Add Harvest
+          </Button>
+          <Button onClick={() => setShowAddCrop(true)} className="gap-2">
+            <Plus className="h-4 w-4" />
+            Add Crop
+          </Button>
+        </div>
       </div>
 
       {/* Ready to Harvest Section */}
@@ -520,6 +587,7 @@ export function ActiveCrops() {
               <GrowthProgressCard
                 key={crop.id}
                 crop={crop}
+                allCrops={crops}
                 onDelete={handleDelete}
                 onArchive={handleArchive}
                 onAddNote={handleAddNote}
@@ -542,6 +610,7 @@ export function ActiveCrops() {
               <GrowthProgressCard
                 key={crop.id}
                 crop={crop}
+                allCrops={crops}
                 onDelete={handleDelete}
                 onArchive={handleArchive}
                 onAddNote={handleAddNote}
@@ -564,6 +633,7 @@ export function ActiveCrops() {
               <GrowthProgressCard
                 key={crop.id}
                 crop={crop}
+                allCrops={crops}
                 onDelete={handleDelete}
                 onArchive={handleArchive}
                 onAddNote={handleAddNote}
