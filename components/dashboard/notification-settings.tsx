@@ -35,9 +35,13 @@ import {
   Chrome,
   FlaskConical,
   Salad,
-  AlertCircle
+  AlertCircle,
+  ShoppingBasket,
+  CheckCircle2
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getPlantTips, getNextFeedingDate, getNextPruningDate, getTaskUrgency } from '@/lib/plant-tips'
+import { Checkbox } from '@/components/ui/checkbox'
 
 // Types
 interface NotificationSettings {
@@ -51,6 +55,7 @@ interface NotificationSettings {
 
 interface ScheduledTask {
   id: string
+  cropId: string
   title: string
   description: string
   crop: string
@@ -58,80 +63,120 @@ interface ScheduledTask {
   frequency: string
   nextDate: Date
   howToLink?: string
+  completed?: boolean
+  urgency?: 'today' | 'soon' | 'upcoming' | 'past'
 }
 
 interface CropInfo {
+  id: string
   name: string
   plantedDate: Date
   daysToMaturity: number
 }
 
-// Mock active crops - in real app would come from Supabase
+// Mock active crops - in real app would come from localStorage or Supabase
 const mockActiveCrops: CropInfo[] = [
-  { name: 'Cherry Tomatoes', plantedDate: new Date('2024-05-15'), daysToMaturity: 70 },
-  { name: 'Bell Peppers', plantedDate: new Date('2024-05-20'), daysToMaturity: 75 },
-  { name: 'Zucchini', plantedDate: new Date('2024-06-01'), daysToMaturity: 50 },
-  { name: 'Basil', plantedDate: new Date('2024-05-25'), daysToMaturity: 30 },
+  { id: 'crop-1', name: 'Cherry Tomatoes', plantedDate: new Date('2024-05-15'), daysToMaturity: 70 },
+  { id: 'crop-2', name: 'Bell Peppers', plantedDate: new Date('2024-05-20'), daysToMaturity: 75 },
+  { id: 'crop-3', name: 'Zucchini', plantedDate: new Date('2024-06-01'), daysToMaturity: 50 },
+  { id: 'crop-4', name: 'Basil', plantedDate: new Date('2024-05-25'), daysToMaturity: 30 },
 ]
 
-// Generate smart schedule based on crops
+// Get last fed/pruned timestamp from localStorage
+function getLastActionDate(cropId: string, action: 'fed' | 'pruned'): Date | null {
+  if (typeof window === 'undefined') return null
+  const timestamp = localStorage.getItem(`garden_${action}_${cropId}`)
+  return timestamp ? new Date(timestamp) : null
+}
+
+// Save action completion to localStorage
+function markActionComplete(cropId: string, action: 'fed' | 'pruned'): void {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(`garden_${action}_${cropId}`, new Date().toISOString())
+}
+
+// Generate smart schedule based on crops with real plant-specific intervals
 function generateSmartSchedule(crops: CropInfo[]): ScheduledTask[] {
   const tasks: ScheduledTask[] = []
   const today = new Date()
+  today.setHours(0, 0, 0, 0)
   
-  crops.forEach((crop, index) => {
-    // Pruning tasks (tomatoes and peppers need regular pruning)
-    if (crop.name.toLowerCase().includes('tomato') || crop.name.toLowerCase().includes('pepper')) {
-      const nextFriday = new Date(today)
-      nextFriday.setDate(today.getDate() + ((5 - today.getDay() + 7) % 7 || 7))
+  crops.forEach((crop) => {
+    const tips = getPlantTips(crop.name)
+    
+    // Pruning tasks - only for plants that need it
+    if (tips.pruning_interval_days > 0) {
+      const lastPruned = getLastActionDate(crop.id, 'pruned')
+      const nextPruneDate = getNextPruningDate(crop.name, crop.plantedDate, lastPruned)
       
-      tasks.push({
-        id: `prune-${index}`,
-        title: `Prune ${crop.name}`,
-        description: `Check for suckers and remove yellowing leaves to encourage healthy growth.`,
-        crop: crop.name,
-        type: 'pruning',
-        frequency: 'Every Friday',
-        nextDate: nextFriday,
-        howToLink: `https://en.wikipedia.org/wiki/${crop.name.replace(' ', '_')}#Cultivation`
-      })
+      if (nextPruneDate) {
+        const urgency = getTaskUrgency(nextPruneDate)
+        tasks.push({
+          id: `prune-${crop.id}`,
+          cropId: crop.id,
+          title: `Prune ${crop.name}`,
+          description: `Check for suckers and remove yellowing leaves to encourage healthy growth.`,
+          crop: crop.name,
+          type: 'pruning',
+          frequency: `Every ${tips.pruning_interval_days} days`,
+          nextDate: nextPruneDate,
+          urgency,
+          howToLink: `https://en.wikipedia.org/wiki/${crop.name.replace(' ', '_')}#Cultivation`
+        })
+      }
     }
     
-    // Feeding tasks (every 2 weeks)
-    const nextFeeding = new Date(today)
-    nextFeeding.setDate(today.getDate() + (14 - (Math.floor((today.getTime() - crop.plantedDate.getTime()) / (1000 * 60 * 60 * 24)) % 14)))
+    // Feeding tasks - uses last fed date from localStorage
+    const lastFed = getLastActionDate(crop.id, 'fed')
+    const nextFeedingDate = getNextFeedingDate(crop.name, crop.plantedDate, lastFed)
+    const feedingUrgency = getTaskUrgency(nextFeedingDate)
     
     tasks.push({
-      id: `feed-${index}`,
+      id: `feed-${crop.id}`,
+      cropId: crop.id,
       title: `Feed ${crop.name}`,
       description: `Apply balanced fertilizer to support growth and fruit production.`,
       crop: crop.name,
       type: 'feeding',
-      frequency: 'Every 2 weeks',
-      nextDate: nextFeeding,
+      frequency: `Every ${tips.nutrient_interval_days} days`,
+      nextDate: nextFeedingDate,
+      urgency: feedingUrgency,
       howToLink: `https://en.wikipedia.org/wiki/Fertilizer#Application`
     })
     
-    // Harvest window
+    // Harvest window - special urgency for close harvests
     const harvestDate = new Date(crop.plantedDate)
     harvestDate.setDate(harvestDate.getDate() + crop.daysToMaturity)
+    const daysUntilHarvest = Math.ceil((harvestDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24))
     
-    if (harvestDate > today) {
+    if (daysUntilHarvest > -7) { // Show if within past week or future
+      const harvestUrgency = getTaskUrgency(harvestDate)
+      const isHarvestSoon = daysUntilHarvest > 0 && daysUntilHarvest <= 5
+      
       tasks.push({
-        id: `harvest-${index}`,
-        title: `Harvest ${crop.name}`,
-        description: `Expected harvest window begins! Check for ripe produce.`,
+        id: `harvest-${crop.id}`,
+        cropId: crop.id,
+        title: isHarvestSoon ? `Get your basket ready for ${crop.name}!` : `Harvest ${crop.name}`,
+        description: isHarvestSoon 
+          ? `Harvest starts in ${daysUntilHarvest} day${daysUntilHarvest === 1 ? '' : 's'}! ${tips.harvest_tip || 'Check for ripe produce.'}`
+          : `Expected harvest window begins! ${tips.harvest_tip || 'Check for ripe produce.'}`,
         crop: crop.name,
         type: 'harvest',
-        frequency: 'One-time',
+        frequency: 'Harvest window',
         nextDate: harvestDate,
+        urgency: harvestUrgency,
         howToLink: `https://en.wikipedia.org/wiki/${crop.name.replace(' ', '_')}#Harvesting`
       })
     }
   })
   
-  // Sort by next date
-  return tasks.sort((a, b) => a.nextDate.getTime() - b.nextDate.getTime())
+  // Sort by next date, with today's tasks first
+  return tasks.sort((a, b) => {
+    // Prioritize "today" tasks
+    if (a.urgency === 'today' && b.urgency !== 'today') return -1
+    if (b.urgency === 'today' && a.urgency !== 'today') return 1
+    return a.nextDate.getTime() - b.nextDate.getTime()
+  })
 }
 
 // Icons for task types
@@ -167,6 +212,29 @@ export function NotificationSettings() {
   const [selectedTask, setSelectedTask] = useState<ScheduledTask | null>(null)
   const [wikiSummary, setWikiSummary] = useState<string>('')
   const [loadingWiki, setLoadingWiki] = useState(false)
+  const [completedTaskIds, setCompletedTaskIds] = useState<Set<string>>(new Set())
+
+  // Handle marking a task as complete
+  const handleTaskComplete = (task: ScheduledTask) => {
+    if (task.type === 'feeding') {
+      markActionComplete(task.cropId, 'fed')
+    } else if (task.type === 'pruning') {
+      markActionComplete(task.cropId, 'pruned')
+    }
+    
+    // Add to completed set for visual feedback
+    setCompletedTaskIds(prev => new Set([...prev, task.id]))
+    
+    // Regenerate schedule after a short delay to show the check animation
+    setTimeout(() => {
+      setScheduledTasks(generateSmartSchedule(mockActiveCrops))
+      setCompletedTaskIds(prev => {
+        const next = new Set(prev)
+        next.delete(task.id)
+        return next
+      })
+    }, 1500)
+  }
   
   // Check notification permission on mount
   useEffect(() => {
@@ -572,22 +640,22 @@ export function NotificationSettings() {
         </CardContent>
       </Card>
       
-      {/* Smart Schedule */}
+      {/* Care Schedule — Key Times */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
               <CardTitle className="flex items-center gap-2">
                 <Calendar className="h-5 w-5 text-primary" />
-                Smart Care Schedule
+                Care Schedule — Key Times
               </CardTitle>
               <CardDescription>
-                Generated based on your active crops
+                Smart reminders based on each plant&apos;s needs
               </CardDescription>
             </div>
             <Badge variant="secondary" className="gap-1">
               <Sparkles className="h-3 w-3" />
-              Auto-generated
+              Per-plant intervals
             </Badge>
           </div>
         </CardHeader>
@@ -596,38 +664,79 @@ export function NotificationSettings() {
             <div className="space-y-3">
               {scheduledTasks.map((task) => {
                 const daysUntil = Math.ceil((task.nextDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
-                const isUpcoming = daysUntil <= 3
+                const isUpcoming = daysUntil <= 3 && daysUntil > 0
                 const isToday = daysUntil === 0
+                const isHarvestSoon = task.type === 'harvest' && daysUntil > 0 && daysUntil <= 5
+                const isCompleted = completedTaskIds.has(task.id)
                 
                 return (
                   <div 
                     key={task.id}
                     className={cn(
-                      "p-4 rounded-xl border transition-all hover:shadow-md",
+                      "p-4 rounded-xl border transition-all hover:shadow-md relative",
                       isToday && "border-primary/50 bg-primary/5",
-                      isUpcoming && !isToday && "border-amber-300/50 bg-amber-50/50 dark:bg-amber-950/20"
+                      isUpcoming && !isToday && "border-amber-300/50 bg-amber-50/50 dark:bg-amber-950/20",
+                      isHarvestSoon && "border-green-400/50 bg-gradient-to-r from-green-50 to-amber-50 dark:from-green-950/20 dark:to-amber-950/20",
+                      isCompleted && "opacity-60"
                     )}
                   >
+                    {/* Pulsing indicator for today's tasks */}
+                    {isToday && !isCompleted && (
+                      <span className="absolute top-4 right-4 flex h-3 w-3">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-3 w-3 bg-primary"></span>
+                      </span>
+                    )}
+                    
                     <div className="flex items-start gap-3">
+                      {/* Checkbox for actionable tasks */}
+                      {(task.type === 'feeding' || task.type === 'pruning') && (
+                        <div className="pt-1">
+                          <Checkbox 
+                            checked={isCompleted}
+                            onCheckedChange={() => handleTaskComplete(task)}
+                            className="h-5 w-5 border-2 data-[state=checked]:bg-primary data-[state=checked]:border-primary"
+                          />
+                        </div>
+                      )}
+                      
                       <div className={cn(
                         "h-10 w-10 rounded-full flex items-center justify-center shrink-0",
-                        taskTypeColors[task.type]
+                        taskTypeColors[task.type],
+                        isHarvestSoon && "bg-gradient-to-br from-green-100 to-amber-100 dark:from-green-900 dark:to-amber-900"
                       )}>
-                        {taskTypeIcons[task.type]}
+                        {isHarvestSoon ? <ShoppingBasket className="h-4 w-4 text-green-600 dark:text-green-400" /> : taskTypeIcons[task.type]}
                       </div>
                       
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <p className="font-medium">{task.title}</p>
+                            <p className={cn(
+                              "font-medium",
+                              isCompleted && "line-through text-muted-foreground"
+                            )}>
+                              {task.title}
+                            </p>
                             <p className="text-sm text-muted-foreground line-clamp-2">
                               {task.description}
                             </p>
                           </div>
-                          {isToday && (
-                            <Badge className="shrink-0 bg-primary">Today!</Badge>
+                          {isToday && !isCompleted && (
+                            <Badge className="shrink-0 bg-primary animate-pulse">Today!</Badge>
                           )}
-                          {isUpcoming && !isToday && (
+                          {isCompleted && (
+                            <Badge className="shrink-0 bg-green-500 gap-1">
+                              <CheckCircle2 className="h-3 w-3" />
+                              Done
+                            </Badge>
+                          )}
+                          {isHarvestSoon && !isToday && (
+                            <Badge className="shrink-0 bg-gradient-to-r from-green-500 to-amber-500 text-white border-0 gap-1">
+                              <ShoppingBasket className="h-3 w-3" />
+                              {daysUntil} day{daysUntil === 1 ? '' : 's'}!
+                            </Badge>
+                          )}
+                          {isUpcoming && !isToday && !isHarvestSoon && (
                             <Badge variant="outline" className="shrink-0 border-amber-400 text-amber-600">
                               {daysUntil} days
                             </Badge>
