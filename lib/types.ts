@@ -13,25 +13,26 @@ export interface Profile {
 export interface Plant {
   id: string
   name: string
-  scientific_name: string | null
-  description: string | null
-  image_url: string | null
+  scientific_name?: string | null
+  description?: string | null
+  image_url?: string | null
   category: 'vegetable' | 'fruit' | 'herb' | 'flower' | 'shrub' | 'tree' | 'succulent' | 'indoor'
   sunlight_needs: 'full_sun' | 'partial_sun' | 'shade'
   water_needs: 'low' | 'moderate' | 'high'
-  difficulty: 'easy' | 'moderate' | 'hard'
-  growing_season: string | null
-  days_to_harvest: number | null
-  spacing_inches: number | null
-  min_temp_f: number | null
-  max_temp_f: number | null
-  care_tips: string | null
-  created_at: string
+  difficulty: 'easy' | 'moderate' | 'hard' | 'beginner' | 'intermediate' | 'advanced'
+  growing_season?: string | null
+  days_to_harvest?: number | null
+  days_to_maturity?: number
+  spacing_inches?: number | null
+  min_temp_f?: number | null
+  max_temp_f?: number | null
+  care_tips?: string | null
+  created_at?: string
 }
 
 export interface Garden {
   id: string
-  user_id: string
+  user_id?: string
   name: string
   description: string | null
   size_sqft: number | null

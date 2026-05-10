@@ -1,58 +1,91 @@
 'use client'
 
-import { useRouter, useSearchParams } from 'next/navigation'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Button } from '@/components/ui/button'
 import { Search, X } from 'lucide-react'
-import { useCallback, useState, useTransition } from 'react'
+import { useState } from 'react'
 
-export function PlantsFilters() {
-  const router = useRouter()
-  const searchParams = useSearchParams()
-  const [isPending, startTransition] = useTransition()
-  const [search, setSearch] = useState(searchParams.get('search') || '')
+interface PlantsFiltersProps {
+  onFilterChange?: (filters: {
+    category?: string
+    difficulty?: string
+    sunlight?: string
+    water?: string
+    search?: string
+  }) => void
+}
 
-  const createQueryString = useCallback(
-    (params: Record<string, string | null>) => {
-      const newSearchParams = new URLSearchParams(searchParams.toString())
-      
-      Object.entries(params).forEach(([key, value]) => {
-        if (value === null || value === '' || value === 'all') {
-          newSearchParams.delete(key)
-        } else {
-          newSearchParams.set(key, value)
-        }
+export function PlantsFilters({ onFilterChange }: PlantsFiltersProps) {
+  const [search, setSearch] = useState('')
+  const [category, setCategory] = useState('all')
+  const [difficulty, setDifficulty] = useState('all')
+  const [sunlight, setSunlight] = useState('all')
+  const [water, setWater] = useState('all')
+
+  const applyFilters = () => {
+    onFilterChange?.({
+      category: category !== 'all' ? category : undefined,
+      difficulty: difficulty !== 'all' ? difficulty : undefined,
+      sunlight: sunlight !== 'all' ? sunlight : undefined,
+      water: water !== 'all' ? water : undefined,
+      search: search || undefined,
+    })
+  }
+
+  const handleFilterChange = (type: string, value: string) => {
+    const newFilters: any = {
+      category,
+      difficulty,
+      sunlight,
+      water,
+      search,
+    }
+    newFilters[type] = value !== 'all' ? value : 'all'
+    
+    if (type === 'category') setCategory(value)
+    if (type === 'difficulty') setDifficulty(value)
+    if (type === 'sunlight') setSunlight(value)
+    if (type === 'water') setWater(value)
+
+    // Apply filters immediately for selects, after typing for search
+    if (type !== 'search') {
+      onFilterChange?.({
+        category: newFilters.category !== 'all' ? newFilters.category : undefined,
+        difficulty: newFilters.difficulty !== 'all' ? newFilters.difficulty : undefined,
+        sunlight: newFilters.sunlight !== 'all' ? newFilters.sunlight : undefined,
+        water: newFilters.water !== 'all' ? newFilters.water : undefined,
+        search: newFilters.search || undefined,
       })
-      
-      return newSearchParams.toString()
-    },
-    [searchParams]
-  )
+    }
+  }
 
-  const handleFilterChange = (key: string, value: string) => {
-    startTransition(() => {
-      const queryString = createQueryString({ [key]: value })
-      router.push(`/plants${queryString ? `?${queryString}` : ''}`)
+  const handleSearchChange = (value: string) => {
+    setSearch(value)
+    onFilterChange?.({
+      category: category !== 'all' ? category : undefined,
+      difficulty: difficulty !== 'all' ? difficulty : undefined,
+      sunlight: sunlight !== 'all' ? sunlight : undefined,
+      water: water !== 'all' ? water : undefined,
+      search: value || undefined,
     })
   }
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    startTransition(() => {
-      const queryString = createQueryString({ search })
-      router.push(`/plants${queryString ? `?${queryString}` : ''}`)
-    })
+    applyFilters()
   }
 
   const clearFilters = () => {
     setSearch('')
-    startTransition(() => {
-      router.push('/plants')
-    })
+    setCategory('all')
+    setDifficulty('all')
+    setSunlight('all')
+    setWater('all')
+    onFilterChange?.({})
   }
 
-  const hasFilters = searchParams.toString().length > 0
+  const hasFilters = search || category !== 'all' || difficulty !== 'all' || sunlight !== 'all' || water !== 'all'
 
   return (
     <div className="space-y-4">
@@ -62,18 +95,18 @@ export function PlantsFilters() {
           <Input
             placeholder="Search plants..."
             value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            onChange={(e) => handleSearchChange(e.target.value)}
             className="pl-9"
           />
         </div>
-        <Button type="submit" disabled={isPending}>
+        <Button type="submit">
           Search
         </Button>
       </form>
 
       <div className="flex flex-wrap gap-3 items-center">
         <Select
-          value={searchParams.get('category') || 'all'}
+          value={category}
           onValueChange={(value) => handleFilterChange('category', value)}
         >
           <SelectTrigger className="w-[150px]">
@@ -93,7 +126,7 @@ export function PlantsFilters() {
         </Select>
 
         <Select
-          value={searchParams.get('difficulty') || 'all'}
+          value={difficulty}
           onValueChange={(value) => handleFilterChange('difficulty', value)}
         >
           <SelectTrigger className="w-[140px]">
@@ -101,14 +134,14 @@ export function PlantsFilters() {
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All Levels</SelectItem>
-            <SelectItem value="easy">Easy</SelectItem>
-            <SelectItem value="moderate">Moderate</SelectItem>
-            <SelectItem value="hard">Hard</SelectItem>
+            <SelectItem value="beginner">Beginner</SelectItem>
+            <SelectItem value="intermediate">Intermediate</SelectItem>
+            <SelectItem value="advanced">Advanced</SelectItem>
           </SelectContent>
         </Select>
 
         <Select
-          value={searchParams.get('sunlight') || 'all'}
+          value={sunlight}
           onValueChange={(value) => handleFilterChange('sunlight', value)}
         >
           <SelectTrigger className="w-[140px]">
@@ -123,7 +156,7 @@ export function PlantsFilters() {
         </Select>
 
         <Select
-          value={searchParams.get('water') || 'all'}
+          value={water}
           onValueChange={(value) => handleFilterChange('water', value)}
         >
           <SelectTrigger className="w-[140px]">

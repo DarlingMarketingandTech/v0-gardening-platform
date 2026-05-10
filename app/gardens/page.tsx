@@ -1,6 +1,7 @@
-import { redirect } from 'next/navigation'
+'use client'
+
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { GardenCard } from '@/components/garden-card'
@@ -9,36 +10,26 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Plus, Sprout } from 'lucide-react'
 import type { Garden } from '@/lib/types'
 
-export default async function GardensPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+export default function GardensPage() {
+  const [gardens, setGardens] = useState<Garden[]>([])
+  const [loading, setLoading] = useState(true)
 
-  if (!user) {
-    redirect('/auth/login')
-  }
-
-  const { data: gardens } = await supabase
-    .from('gardens')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  // Fetch garden plant counts
-  const gardenIds = gardens?.map(g => g.id) || []
-  const { data: plantCounts } = gardenIds.length > 0
-    ? await supabase
-        .from('garden_plants')
-        .select('garden_id')
-        .in('garden_id', gardenIds)
-    : { data: [] }
-
-  const countByGarden = (plantCounts || []).reduce((acc: Record<string, number>, item: { garden_id: string }) => {
-    acc[item.garden_id] = (acc[item.garden_id] || 0) + 1
-    return acc
-  }, {})
+  // Load gardens from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('mommaGardens')
+    if (saved) {
+      try {
+        setGardens(JSON.parse(saved))
+      } catch {
+        setGardens([])
+      }
+    }
+    setLoading(false)
+  }, [])
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={user} />
+      <Header />
       
       <main className="flex-1 container px-4 py-8">
         <div className="flex items-center justify-between mb-8">
@@ -56,13 +47,13 @@ export default async function GardensPage() {
           </Button>
         </div>
 
-        {gardens && gardens.length > 0 ? (
+        {!loading && gardens && gardens.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {gardens.map((garden: Garden) => (
               <GardenCard 
                 key={garden.id} 
                 garden={garden} 
-                plantCount={countByGarden[garden.id] || 0}
+                plantCount={0}
               />
             ))}
           </div>

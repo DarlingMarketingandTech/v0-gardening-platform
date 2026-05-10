@@ -1,48 +1,92 @@
-import { createClient } from '@/lib/supabase/server'
+'use client'
+
+import { useState, useEffect } from 'react'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { PlantCard } from '@/components/plant-card'
 import { PlantsFilters } from '@/components/plants-filters'
 import type { Plant } from '@/lib/types'
 
-interface PlantsPageProps {
-  searchParams: Promise<{
+// Sample plant data
+const SAMPLE_PLANTS: Plant[] = [
+  {
+    id: '1',
+    name: 'Tomato',
+    scientific_name: 'Solanum lycopersicum',
+    category: 'vegetable',
+    difficulty: 'beginner',
+    sunlight_needs: 'full_sun',
+    water_needs: 'moderate',
+    days_to_maturity: 70,
+    description: 'Popular garden vegetable, rich in vitamins and great for fresh eating or cooking.',
+    care_tips: 'Provide sturdy support, consistent watering, and full sunlight.',
+  },
+  {
+    id: '2',
+    name: 'Basil',
+    scientific_name: 'Ocimum basilicum',
+    category: 'herb',
+    difficulty: 'beginner',
+    sunlight_needs: 'full_sun',
+    water_needs: 'moderate',
+    days_to_maturity: 21,
+    description: 'Aromatic herb perfect for cooking and companion planting.',
+    care_tips: 'Pinch off flowers to encourage leaf growth. Keep soil moist but not waterlogged.',
+  },
+  {
+    id: '3',
+    name: 'Pepper',
+    scientific_name: 'Capsicum annuum',
+    category: 'vegetable',
+    difficulty: 'intermediate',
+    sunlight_needs: 'full_sun',
+    water_needs: 'moderate',
+    days_to_maturity: 60,
+    description: 'Colorful and nutritious, peppers add beauty and flavor to gardens and kitchens.',
+    care_tips: 'Provide consistent warmth and moisture. Support heavy fruit with stakes.',
+  },
+]
+
+export default function PlantsPage() {
+  const [plants, setPlants] = useState<Plant[]>(SAMPLE_PLANTS)
+  const [filteredPlants, setFilteredPlants] = useState<Plant[]>(SAMPLE_PLANTS)
+
+  const handleFilterChange = (filters: {
     category?: string
     difficulty?: string
     sunlight?: string
     water?: string
     search?: string
-  }>
-}
+  }) => {
+    let filtered = plants
 
-export default async function PlantsPage({ searchParams }: PlantsPageProps) {
-  const params = await searchParams
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+    if (filters.category) {
+      filtered = filtered.filter(p => p.category === filters.category)
+    }
+    if (filters.difficulty) {
+      filtered = filtered.filter(p => p.difficulty === filters.difficulty)
+    }
+    if (filters.sunlight) {
+      filtered = filtered.filter(p => p.sunlight_needs === filters.sunlight)
+    }
+    if (filters.water) {
+      filtered = filtered.filter(p => p.water_needs === filters.water)
+    }
+    if (filters.search) {
+      const search = filters.search.toLowerCase()
+      filtered = filtered.filter(p => 
+        p.name.toLowerCase().includes(search) ||
+        (p.scientific_name?.toLowerCase().includes(search) ?? false) ||
+        (p.description?.toLowerCase().includes(search) ?? false)
+      )
+    }
 
-  let query = supabase.from('plants').select('*')
-
-  if (params.category) {
-    query = query.eq('category', params.category)
+    setFilteredPlants(filtered)
   }
-  if (params.difficulty) {
-    query = query.eq('difficulty', params.difficulty)
-  }
-  if (params.sunlight) {
-    query = query.eq('sunlight_needs', params.sunlight)
-  }
-  if (params.water) {
-    query = query.eq('water_needs', params.water)
-  }
-  if (params.search) {
-    query = query.or(`name.ilike.%${params.search}%,scientific_name.ilike.%${params.search}%,description.ilike.%${params.search}%`)
-  }
-
-  const { data: plants } = await query.order('name')
 
   return (
     <div className="min-h-screen flex flex-col">
-      <Header user={user} />
+      <Header />
       
       <main className="flex-1 container px-4 py-8">
         <div className="mb-8">
@@ -52,11 +96,11 @@ export default async function PlantsPage({ searchParams }: PlantsPageProps) {
           </p>
         </div>
 
-        <PlantsFilters />
+        <PlantsFilters onFilterChange={handleFilterChange} />
 
-        {plants && plants.length > 0 ? (
+        {filteredPlants && filteredPlants.length > 0 ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
-            {plants.map((plant: Plant) => (
+            {filteredPlants.map((plant: Plant) => (
               <PlantCard key={plant.id} plant={plant} />
             ))}
           </div>
