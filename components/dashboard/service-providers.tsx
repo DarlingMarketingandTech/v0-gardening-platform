@@ -147,7 +147,13 @@ function PriceLevel({ level }: { level: number }) {
   )
 }
 
-export function ServiceProviders() {
+interface ServiceProvidersProps {
+  latitude?: number | null
+  longitude?: number | null
+}
+
+export function ServiceProviders({ latitude, longitude }: ServiceProvidersProps) {
+  // Note: In production, use lat/lng to fetch real providers from Yelp API
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 

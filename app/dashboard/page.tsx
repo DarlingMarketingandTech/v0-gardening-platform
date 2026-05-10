@@ -1,70 +1,55 @@
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { Header } from '@/components/header'
-import { Footer } from '@/components/footer'
-import { DashboardClient } from '@/components/dashboard/dashboard-client'
-import type { Garden, Plant, Profile } from '@/lib/types'
+"use client"
 
-export default async function DashboardPage() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
+import { DashboardClient } from "@/components/dashboard/dashboard-client"
+import { getProfile } from "@/lib/profile-store"
+import { Loader2, Flower2 } from "lucide-react"
+import type { Plant } from "@/lib/types"
 
-  if (!user) {
-    redirect('/auth/login')
+export default function DashboardPage() {
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(true)
+  const [plants, setPlants] = useState<Plant[]>([])
+
+  useEffect(() => {
+    const profile = getProfile()
+    
+    // Redirect to setup if profile not complete
+    if (!profile.setupComplete) {
+      router.push('/setup')
+      return
+    }
+
+    // Fetch plants from database
+    async function fetchPlants() {
+      const supabase = createClient()
+      const { data } = await supabase
+        .from('plants')
+        .select('*')
+        .order('name')
+      
+      setPlants((data || []) as Plant[])
+      setIsLoading(false)
+    }
+
+    fetchPlants()
+  }, [router])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-primary/5 to-background">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
+            <Flower2 className="h-8 w-8 text-primary animate-pulse" />
+          </div>
+          <Loader2 className="h-6 w-6 animate-spin text-muted-foreground mx-auto" />
+          <p className="mt-4 text-muted-foreground">Loading your garden...</p>
+        </div>
+      </div>
+    )
   }
 
-  // Fetch user's gardens
-  const { data: gardens } = await supabase
-    .from('gardens')
-    .select('*')
-    .order('created_at', { ascending: false })
-
-  // Fetch garden plant counts
-  const gardenIds = gardens?.map(g => g.id) || []
-  const { data: gardenPlants } = gardenIds.length > 0 
-    ? await supabase
-        .from('garden_plants')
-        .select('garden_id, plant_id, status, planted_date, expected_harvest_date')
-        .in('garden_id', gardenIds)
-    : { data: [] }
-
-  // Get total stats
-  const { count: totalGardens } = await supabase
-    .from('gardens')
-    .select('*', { count: 'exact', head: true })
-
-  const { count: totalPlants } = await supabase
-    .from('garden_plants')
-    .select('*', { count: 'exact', head: true })
-
-  // Fetch profile
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', user.id)
-    .single()
-
-  // Fetch all plants for the library
-  const { data: plants } = await supabase
-    .from('plants')
-    .select('*')
-    .order('name')
-
-  return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header user={user} />
-      
-      <DashboardClient
-        user={user}
-        profile={profile as Profile | null}
-        gardens={(gardens || []) as Garden[]}
-        gardenPlants={gardenPlants || []}
-        plants={(plants || []) as Plant[]}
-        totalGardens={totalGardens || 0}
-        totalPlants={totalPlants || 0}
-      />
-      
-      <Footer />
-    </div>
-  )
+  return <DashboardClient plants={plants} />
 }

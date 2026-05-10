@@ -2,76 +2,52 @@
 
 import { useState, useEffect } from 'react'
 import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Badge } from '@/components/ui/badge'
-import { GardenCard } from '@/components/garden-card'
 import { WeatherWidget } from './weather-widget'
 import { PlantLibrary } from './plant-library'
 import { TaskList } from './task-list'
 import { GardenLog } from './garden-log'
 import { ServiceProviders } from './service-providers'
-import { PlantIdentifier } from './plant-identifier'
+import { getProfile, type MomProfile } from '@/lib/profile-store'
 import { 
   Sprout, 
   Leaf, 
-  Calendar, 
   Plus, 
-  ArrowRight,
   Home,
   BookOpen,
   MapPin,
   CheckSquare,
   BookHeart,
-  Flower2
+  Flower2,
+  Settings,
+  Sun,
+  Droplets
 } from 'lucide-react'
-import type { User } from '@supabase/supabase-js'
-import type { Garden, Plant, Profile } from '@/lib/types'
+import type { Plant } from '@/lib/types'
 
 interface DashboardClientProps {
-  user: User
-  profile: Profile | null
-  gardens: Garden[]
-  gardenPlants: { garden_id: string; plant_id: string; status: string; planted_date: string | null; expected_harvest_date: string | null }[]
   plants: Plant[]
-  totalGardens: number
-  totalPlants: number
 }
 
-export function DashboardClient({
-  user,
-  profile,
-  gardens,
-  gardenPlants,
-  plants,
-  totalGardens,
-  totalPlants
-}: DashboardClientProps) {
+export function DashboardClient({ plants }: DashboardClientProps) {
   const [activeTab, setActiveTab] = useState('home')
   const [isRainy, setIsRainy] = useState(false)
+  const [profile, setProfile] = useState<MomProfile | null>(null)
 
-  // Calculate plant counts per garden
-  const countByGarden = gardenPlants.reduce((acc: Record<string, number>, item) => {
-    acc[item.garden_id] = (acc[item.garden_id] || 0) + 1
-    return acc
-  }, {})
-
-  // Calculate upcoming harvests
-  const upcomingHarvests = gardenPlants.filter(gp => {
-    if (!gp.expected_harvest_date) return false
-    const harvestDate = new Date(gp.expected_harvest_date)
-    const now = new Date()
-    const daysUntil = Math.ceil((harvestDate.getTime() - now.getTime()) / 86400000)
-    return daysUntil >= 0 && daysUntil <= 14
-  }).length
-
-  // Check weather for rainy conditions (this will be set by WeatherWidget)
   useEffect(() => {
+    setProfile(getProfile())
+  }, [])
+
+  // Check weather for rainy conditions using profile location
+  useEffect(() => {
+    if (!profile?.latitude || !profile?.longitude) return
+
     const checkWeather = async () => {
       try {
         const res = await fetch(
-          'https://api.open-meteo.com/v1/forecast?latitude=40.7128&longitude=-74.006&current=weather_code,precipitation'
+          `https://api.open-meteo.com/v1/forecast?latitude=${profile.latitude}&longitude=${profile.longitude}&current=weather_code,precipitation`
         )
         const data = await res.json()
         if (data.current) {
@@ -84,210 +60,201 @@ export function DashboardClient({
       }
     }
     checkWeather()
-  }, [])
+  }, [profile?.latitude, profile?.longitude])
 
   return (
-    <main className="flex-1 container px-4 py-6">
-      {/* Header Section */}
-      <div className="mb-6">
-        <h1 className="text-2xl md:text-3xl font-bold mb-1">
-          Welcome back{profile?.full_name ? `, ${profile.full_name}` : ''}!
-        </h1>
-        <p className="text-muted-foreground">
-          Your personalized gardening dashboard
-        </p>
-      </div>
-
-      {/* Tab Navigation */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="w-full md:w-auto flex-wrap h-auto gap-1 bg-muted/50 p-1">
-          <TabsTrigger value="home" className="flex items-center gap-1.5 data-[state=active]:bg-background">
-            <Home className="h-4 w-4" />
-            <span className="hidden sm:inline">Overview</span>
-          </TabsTrigger>
-          <TabsTrigger value="plants" className="flex items-center gap-1.5 data-[state=active]:bg-background">
-            <BookOpen className="h-4 w-4" />
-            <span className="hidden sm:inline">Plants</span>
-          </TabsTrigger>
-          <TabsTrigger value="tasks" className="flex items-center gap-1.5 data-[state=active]:bg-background">
-            <CheckSquare className="h-4 w-4" />
-            <span className="hidden sm:inline">Tasks</span>
-          </TabsTrigger>
-          <TabsTrigger value="log" className="flex items-center gap-1.5 data-[state=active]:bg-background">
-            <BookHeart className="h-4 w-4" />
-            <span className="hidden sm:inline">Log</span>
-          </TabsTrigger>
-          <TabsTrigger value="local" className="flex items-center gap-1.5 data-[state=active]:bg-background">
-            <MapPin className="h-4 w-4" />
-            <span className="hidden sm:inline">Local Pros</span>
-          </TabsTrigger>
-        </TabsList>
-
-        {/* HOME TAB */}
-        <TabsContent value="home" className="space-y-6 mt-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Gardens
-                </CardTitle>
-                <Sprout className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl md:text-3xl font-bold">{totalGardens}</div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Plants Growing
-                </CardTitle>
-                <Leaf className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl md:text-3xl font-bold">{totalPlants}</div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Harvests Soon
-                </CardTitle>
-                <Flower2 className="h-4 w-4 text-amber-500" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl md:text-3xl font-bold">{upcomingHarvests}</div>
-              </CardContent>
-            </Card>
-            
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between pb-2">
-                <CardTitle className="text-sm font-medium text-muted-foreground">
-                  Experience
-                </CardTitle>
-                <Calendar className="h-4 w-4 text-primary" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-xl md:text-2xl font-bold capitalize">
-                  {profile?.experience_level || 'Beginner'}
-                </div>
-              </CardContent>
-            </Card>
+    <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-accent/5">
+      {/* Header */}
+      <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-primary/10">
+        <div className="container px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Flower2 className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="font-semibold text-lg leading-tight">
+                {profile?.gardenName || "Mom's Garden"}
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                {profile?.city}, {profile?.state}
+              </p>
+            </div>
           </div>
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/settings">
+              <Settings className="h-5 w-5" />
+            </Link>
+          </Button>
+        </div>
+      </header>
 
-          {/* Main Grid */}
-          <div className="grid lg:grid-cols-2 gap-6">
-            {/* Weather Widget */}
-            <WeatherWidget />
+      <main className="container px-4 py-6">
+        {/* Greeting */}
+        <div className="mb-6">
+          <h2 className="text-2xl md:text-3xl font-bold mb-1">
+            Hello, {profile?.name || 'Gardener'}!
+          </h2>
+          <p className="text-muted-foreground">
+            {getGreeting()}
+          </p>
+        </div>
 
-            {/* Plant Identifier */}
-            <div className="space-y-6">
-              <PlantIdentifier />
+        {/* Tab Navigation */}
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+          <TabsList className="w-full grid grid-cols-5 h-auto bg-muted/50 p-1 rounded-xl">
+            <TabsTrigger 
+              value="home" 
+              className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-background rounded-lg"
+            >
+              <Home className="h-5 w-5" />
+              <span className="text-xs">Home</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="plants" 
+              className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-background rounded-lg"
+            >
+              <BookOpen className="h-5 w-5" />
+              <span className="text-xs">Plants</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="tasks" 
+              className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-background rounded-lg"
+            >
+              <CheckSquare className="h-5 w-5" />
+              <span className="text-xs">Tasks</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="log" 
+              className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-background rounded-lg"
+            >
+              <BookHeart className="h-5 w-5" />
+              <span className="text-xs">Log</span>
+            </TabsTrigger>
+            <TabsTrigger 
+              value="local" 
+              className="flex flex-col items-center gap-1 py-2 data-[state=active]:bg-background rounded-lg"
+            >
+              <MapPin className="h-5 w-5" />
+              <span className="text-xs">Local</span>
+            </TabsTrigger>
+          </TabsList>
+
+          {/* HOME TAB */}
+          <TabsContent value="home" className="space-y-6 mt-6">
+            {/* Weather Widget - Full Width */}
+            <WeatherWidget 
+              latitude={profile?.latitude || null} 
+              longitude={profile?.longitude || null}
+              locationName={profile?.city ? `${profile.city}, ${profile.state}` : undefined}
+            />
+
+            {/* Quick Stats */}
+            <div className="grid grid-cols-3 gap-3">
+              <Card className="bg-green-50 dark:bg-green-950/30 border-green-200/50">
+                <CardContent className="pt-4 pb-4 text-center">
+                  <Sprout className="h-6 w-6 text-green-600 dark:text-green-400 mx-auto mb-1" />
+                  <div className="text-2xl font-bold text-green-700 dark:text-green-300">12</div>
+                  <div className="text-xs text-green-600/80 dark:text-green-400/80">Growing</div>
+                </CardContent>
+              </Card>
               
-              {/* Quick Actions */}
-              <Card className="bg-gradient-to-br from-primary/5 to-transparent border-primary/20">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Plus className="h-5 w-5" />
-                    Quick Actions
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="grid grid-cols-2 gap-3">
-                  <Button asChild>
-                    <Link href="/gardens/new">
-                      <Sprout className="h-4 w-4 mr-2" />
-                      New Garden
-                    </Link>
-                  </Button>
-                  <Button variant="outline" asChild>
-                    <Link href="/plants">
-                      <BookOpen className="h-4 w-4 mr-2" />
-                      Browse Plants
-                    </Link>
-                  </Button>
-                  <Button variant="outline" asChild>
-                    <Link href="/planner">
-                      <Calendar className="h-4 w-4 mr-2" />
-                      Planner
-                    </Link>
-                  </Button>
-                  <Button variant="outline" onClick={() => setActiveTab('tasks')}>
-                    <CheckSquare className="h-4 w-4 mr-2" />
-                    Tasks
-                  </Button>
+              <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200/50">
+                <CardContent className="pt-4 pb-4 text-center">
+                  <Sun className="h-6 w-6 text-amber-600 dark:text-amber-400 mx-auto mb-1" />
+                  <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">3</div>
+                  <div className="text-xs text-amber-600/80 dark:text-amber-400/80">Need Sun</div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200/50">
+                <CardContent className="pt-4 pb-4 text-center">
+                  <Droplets className="h-6 w-6 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
+                  <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">5</div>
+                  <div className="text-xs text-blue-600/80 dark:text-blue-400/80">Need Water</div>
                 </CardContent>
               </Card>
             </div>
-          </div>
 
-          {/* Recent Gardens */}
-          <div>
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">Your Gardens</h2>
-              <Button variant="ghost" size="sm" asChild>
-                <Link href="/gardens">
-                  View All
-                  <ArrowRight className="h-4 w-4 ml-1" />
-                </Link>
-              </Button>
-            </div>
-            
-            {gardens.length > 0 ? (
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {gardens.slice(0, 3).map((garden) => (
-                  <GardenCard 
-                    key={garden.id} 
-                    garden={garden} 
-                    plantCount={countByGarden[garden.id] || 0}
-                  />
-                ))}
-              </div>
-            ) : (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <Sprout className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                  <h3 className="font-semibold text-lg mb-2">No gardens yet</h3>
-                  <p className="text-muted-foreground mb-4">
-                    Create your first garden to start growing.
-                  </p>
-                  <Button asChild>
-                    <Link href="/gardens/new">
-                      <Plus className="h-4 w-4 mr-2" />
-                      Create Garden
-                    </Link>
+            {/* Quick Actions */}
+            <Card className="border-primary/20">
+              <CardHeader className="pb-3">
+                <CardTitle className="text-lg flex items-center gap-2">
+                  <Plus className="h-5 w-5" />
+                  Quick Actions
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="grid grid-cols-2 gap-3">
+                <Button className="h-auto py-4 flex-col gap-2">
+                  <Leaf className="h-5 w-5" />
+                  <span>Add Plant</span>
+                </Button>
+                <Button variant="outline" className="h-auto py-4 flex-col gap-2" onClick={() => setActiveTab('log')}>
+                  <BookHeart className="h-5 w-5" />
+                  <span>New Log Entry</span>
+                </Button>
+                <Button variant="outline" className="h-auto py-4 flex-col gap-2" onClick={() => setActiveTab('tasks')}>
+                  <CheckSquare className="h-5 w-5" />
+                  <span>View Tasks</span>
+                </Button>
+                <Button variant="outline" className="h-auto py-4 flex-col gap-2" asChild>
+                  <Link href="/plants">
+                    <BookOpen className="h-5 w-5" />
+                    <span>Plant Library</span>
+                  </Link>
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Today's Tasks Preview */}
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-lg">Today&apos;s Tasks</CardTitle>
+                  <Button variant="ghost" size="sm" onClick={() => setActiveTab('tasks')}>
+                    See All
                   </Button>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-        </TabsContent>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <TaskList isRainy={isRainy} compact />
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        {/* PLANTS TAB */}
-        <TabsContent value="plants" className="mt-6">
-          <PlantLibrary plants={plants} />
-        </TabsContent>
+          {/* PLANTS TAB */}
+          <TabsContent value="plants" className="mt-6">
+            <PlantLibrary plants={plants} />
+          </TabsContent>
 
-        {/* TASKS TAB */}
-        <TabsContent value="tasks" className="mt-6">
-          <div className="grid lg:grid-cols-2 gap-6">
+          {/* TASKS TAB */}
+          <TabsContent value="tasks" className="mt-6 space-y-6">
             <TaskList isRainy={isRainy} />
-            <WeatherWidget />
-          </div>
-        </TabsContent>
+          </TabsContent>
 
-        {/* LOG TAB */}
-        <TabsContent value="log" className="mt-6">
-          <GardenLog />
-        </TabsContent>
+          {/* LOG TAB */}
+          <TabsContent value="log" className="mt-6">
+            <GardenLog />
+          </TabsContent>
 
-        {/* LOCAL PROS TAB */}
-        <TabsContent value="local" className="mt-6">
-          <ServiceProviders />
-        </TabsContent>
-      </Tabs>
-    </main>
+          {/* LOCAL PROS TAB */}
+          <TabsContent value="local" className="mt-6">
+            <ServiceProviders 
+              latitude={profile?.latitude || null}
+              longitude={profile?.longitude || null}
+            />
+          </TabsContent>
+        </Tabs>
+      </main>
+
+      {/* Bottom padding for mobile */}
+      <div className="h-6" />
+    </div>
   )
+}
+
+function getGreeting(): string {
+  const hour = new Date().getHours()
+  if (hour < 12) return "Good morning! Ready for some gardening?"
+  if (hour < 17) return "Good afternoon! How's the garden today?"
+  return "Good evening! Time to relax and enjoy your garden."
 }

@@ -48,9 +48,10 @@ const taskIcons: Record<string, React.ReactNode> = {
 
 interface TaskListProps {
   isRainy?: boolean
+  compact?: boolean
 }
 
-export function TaskList({ isRainy = false }: TaskListProps) {
+export function TaskList({ isRainy = false, compact = false }: TaskListProps) {
   const [tasks, setTasks] = useState<Task[]>(defaultTasks)
   const [newTask, setNewTask] = useState('')
 
@@ -98,6 +99,60 @@ export function TaskList({ isRainy = false }: TaskListProps) {
 
   const completedCount = tasks.filter(t => t.completed || (t.autoStrikeOnRain && isRainy)).length
   const totalCount = tasks.length
+
+  // Compact mode - just show first 3 tasks
+  if (compact) {
+    const displayTasks = tasks.slice(0, 3)
+    return (
+      <div className="space-y-2">
+        {displayTasks.map((task) => {
+          const isAutoCompleted = task.autoStrikeOnRain && isRainy
+          const isCompleted = task.completed || isAutoCompleted
+          
+          return (
+            <div
+              key={task.id}
+              className={cn(
+                "flex items-center gap-3 p-2 rounded-lg transition-all",
+                isCompleted 
+                  ? "bg-muted/50" 
+                  : "bg-accent/20"
+              )}
+            >
+              <Checkbox
+                checked={isCompleted}
+                onCheckedChange={() => !isAutoCompleted && toggleTask(task.id)}
+                disabled={isAutoCompleted}
+                className="data-[state=checked]:bg-primary data-[state=checked]:border-primary h-4 w-4"
+              />
+              
+              <div className="flex items-center gap-2 flex-1 min-w-0">
+                {taskIcons[task.icon] || taskIcons.default}
+                <span className={cn(
+                  "text-sm truncate",
+                  isCompleted && "line-through text-muted-foreground"
+                )}>
+                  {task.text}
+                </span>
+              </div>
+
+              {isAutoCompleted && (
+                <Badge variant="secondary" className="flex items-center gap-1 text-xs shrink-0">
+                  <CloudRain className="h-3 w-3" />
+                  Rain
+                </Badge>
+              )}
+            </div>
+          )
+        })}
+        {tasks.length > 3 && (
+          <p className="text-xs text-muted-foreground text-center pt-1">
+            +{tasks.length - 3} more tasks
+          </p>
+        )}
+      </div>
+    )
+  }
 
   return (
     <Card>
