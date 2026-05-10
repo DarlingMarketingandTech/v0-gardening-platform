@@ -29,8 +29,8 @@ export default function SignUpPage() {
       email,
       password,
       options: {
-        emailRedirectTo: process.env.NEXT_PUBLIC_DEV_SUPABASE_REDIRECT_URL ?? 
-          `${window.location.origin}/auth/callback`,
+        // No emailRedirectTo — Supabase will not send a confirmation email
+        // when "Confirm email" is disabled in the Supabase dashboard.
         data: {
           full_name: fullName,
         },
@@ -43,7 +43,16 @@ export default function SignUpPage() {
       return
     }
 
-    router.push('/auth/sign-up-success')
+    // Sign the user in immediately after account creation
+    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
+    if (signInError) {
+      setError(signInError.message)
+      setLoading(false)
+      return
+    }
+
+    router.push('/dashboard')
+    router.refresh()
   }
 
   return (
@@ -52,11 +61,11 @@ export default function SignUpPage() {
         <CardHeader className="text-center">
           <Link href="/" className="flex items-center justify-center gap-2 mb-4">
             <Leaf className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold">GreenThumb</span>
+            <span className="text-2xl font-bold">Momma D&apos;s Garden</span>
           </Link>
-          <CardTitle className="text-2xl">Create an account</CardTitle>
+          <CardTitle className="text-2xl">Create your account</CardTitle>
           <CardDescription>
-            Start your gardening journey today
+            No email confirmation needed — you&apos;ll be in your garden right away.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSignUp}>

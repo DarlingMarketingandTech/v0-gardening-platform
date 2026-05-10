@@ -1,11 +1,21 @@
 'use client'
 
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet'
-import { Leaf, Menu, LayoutDashboard, Settings } from 'lucide-react'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { Leaf, Menu, Settings, LogOut, User } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { createClient } from '@/lib/supabase/client'
+import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 const navLinks = [
   { href: '/dashboard', label: 'Dashboard' },
@@ -17,8 +27,28 @@ interface HeaderProps {
   user?: any
 }
 
-export function Header({ user }: HeaderProps) {
+export function Header({ user: initialUser }: HeaderProps) {
   const pathname = usePathname()
+  const router = useRouter()
+  const [user, setUser] = useState<SupabaseUser | null>(initialUser ?? null)
+  const supabase = createClient()
+
+  useEffect(() => {
+    // Sync session on mount and on auth state changes
+    supabase.auth.getUser().then(({ data }) => setUser(data.user))
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null)
+    })
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut()
+    router.push('/')
+    router.refresh()
+  }
+
+  const displayName = user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'Account'
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -28,7 +58,7 @@ export function Header({ user }: HeaderProps) {
             <Leaf className="h-6 w-6 text-primary" />
             <span className="text-xl font-semibold text-foreground hidden sm:inline">Momma D&apos;s Garden</span>
           </Link>
-          
+
           <nav className="hidden md:flex items-center gap-1">
             {navLinks.map((link) => (
               <Link
@@ -48,12 +78,41 @@ export function Header({ user }: HeaderProps) {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" asChild className="hidden sm:flex">
-            <Link href="/settings">
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Link>
-          </Button>
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="hidden sm:flex gap-2">
+                  <User className="h-4 w-4" />
+                  <span className="max-w-[120px] truncate">{displayName}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                <DropdownMenuItem asChild>
+                  <Link href="/settings" className="flex items-center gap-2">
+                    <Settings className="h-4 w-4" />
+                    Settings
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleSignOut}
+                  className="text-destructive focus:text-destructive flex items-center gap-2"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <div className="hidden sm:flex items-center gap-2">
+              <Button variant="ghost" size="sm" asChild>
+                <Link href="/auth/login">Sign in</Link>
+              </Button>
+              <Button size="sm" asChild>
+                <Link href="/auth/sign-up">Sign up</Link>
+              </Button>
+            </div>
+          )}
 
           {/* Mobile menu */}
           <Sheet>
@@ -80,12 +139,33 @@ export function Header({ user }: HeaderProps) {
                   </Link>
                 ))}
                 <hr className="my-2" />
-                <Link href="/settings">
-                  <Button variant="outline" className="w-full justify-start">
-                    <Settings className="h-4 w-4 mr-2" />
-                    Settings
-                  </Button>
-                </Link>
+                {user ? (
+                  <>
+                    <Link href="/settings">
+                      <Button variant="outline" className="w-full justify-start">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Settings
+                      </Button>
+                    </Link>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start text-destructive"
+                      onClick={handleSignOut}
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Sign out
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link href="/auth/login">
+                      <Button variant="outline" className="w-full">Sign in</Button>
+                    </Link>
+                    <Link href="/auth/sign-up">
+                      <Button className="w-full">Sign up</Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </SheetContent>
           </Sheet>
