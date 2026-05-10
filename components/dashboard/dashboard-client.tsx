@@ -10,6 +10,7 @@ import { PlantLibrary } from './plant-library'
 import { TaskList } from './task-list'
 import { GardenLog } from './garden-log'
 import { ServiceProviders } from './service-providers'
+import { ActiveCrops } from './active-crops'
 import { getProfile, type MomProfile } from '@/lib/profile-store'
 import { 
   Sprout, 
@@ -233,6 +234,9 @@ export function DashboardClient({ plants }: DashboardClientProps) {
                 <TaskList isRainy={isRainy} compact />
               </CardContent>
             </Card>
+
+            {/* Active Crops Section */}
+            <ActiveCrops />
           </TabsContent>
 
           {/* PLANTS TAB */}
