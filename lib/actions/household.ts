@@ -22,7 +22,7 @@ export async function checkFamilyInvite(email: string) {
     invited: true,
     household_id: data.household_id,
     role: data.role,
-    household_name: data.households?.name || null,
+    household_name: data.households && Array.isArray(data.households) && data.households[0]?.name ? data.households[0].name : (data.households as any)?.name,
   }
 }
 
