@@ -30,6 +30,53 @@ export interface Plant {
   created_at?: string
 }
 
+export type GardenZoneType = 'container' | 'in_ground' | 'raised_bed' | 'raised_bed_trellis'
+
+export interface GardenZone {
+  id: string
+  name: string
+  type: GardenZoneType
+  description: string
+  sunlight: 'full_sun' | 'morning_sun' | 'afternoon_sun' | 'partial_sun' | 'shade'
+  soilProfile: string
+  waterProfile: string
+  bestFor: string[]
+  caution: string
+}
+
+export interface GardenPlanting {
+  id: string
+  plantId: string
+  zoneId: string
+  plantName: string
+  scientificName: string
+  status: 'planned' | 'seed_started' | 'transplanted' | 'growing' | 'flowering' | 'fruiting' | 'harvesting'
+  plantedDate: string
+  expectedHarvestWindow: string
+  purpose: string
+  successStrategy: string
+}
+
+export interface GardenTask {
+  id: string
+  title: string
+  dueTiming: 'today' | 'this_week' | 'soon' | 'seasonal'
+  zoneId?: string
+  plantingId?: string
+  reason: string
+  botanistNote: string
+}
+
+export interface GardenInsight {
+  id: string
+  title: string
+  priority: 'high' | 'medium' | 'low'
+  topic: 'placement' | 'watering' | 'soil' | 'pruning' | 'pest' | 'harvest' | 'nutrition'
+  summary: string
+  science: string
+  action: string
+}
+
 export interface Garden {
   id: string
   user_id?: string
