@@ -2,69 +2,38 @@
 
 import { useState } from 'react'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import { ensureHouseholdMembership } from '@/lib/actions/household'
+import { sendGardenMagicLink } from '@/lib/actions/household'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
-import { Leaf, Loader2 } from 'lucide-react'
+import { Leaf, Loader2, MailCheck } from 'lucide-react'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [success, setSuccess] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
-  const supabase = createClient()
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    setSuccess(null)
     setLoading(true)
 
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      })
+      const result = await sendGardenMagicLink(email)
 
-      if (signInError) {
-        setError(signInError.message)
+      if (!result.success) {
+        setError(result.error ?? 'We could not send your garden sign-in link.')
         return
       }
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-
-      if (userError || !user) {
-        setError(userError?.message ?? 'Could not load your account. Please try again.')
-        return
-      }
-
-      const sessionEmail = user.email?.trim() ? user.email.trim().toLowerCase() : email.trim().toLowerCase()
-      const displayName =
-        typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : undefined
-
-      const membership = await ensureHouseholdMembership(sessionEmail, user.id, displayName)
-
-      if (!membership.success) {
-        setError(
-          membership.error ??
-            "You signed in, but we could not connect you to Momma D's Garden. Please check your invite setup.",
-        )
-        return
-      }
-
-      router.replace('/my-garden')
-      router.refresh()
+      setSuccess(result.message ?? 'Check your email for your garden sign-in link.')
     } catch (err) {
-      console.error('Login failed:', err)
-      setError('Sign in did not finish. Please try again.')
+      console.error('Magic link request failed:', err)
+      setError('Sign in did not start. Please try again.')
     } finally {
       setLoading(false)
     }
@@ -78,9 +47,9 @@ export default function LoginPage() {
             <Leaf className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold">Momma D&apos;s Garden</span>
           </Link>
-          <CardTitle className="text-2xl">Welcome back</CardTitle>
+          <CardTitle className="text-2xl">Open the garden gate</CardTitle>
           <CardDescription>
-            Sign in to your garden
+            Enter your invited email and we&apos;ll send you a secure sign-in link.
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleLogin}>
@@ -88,6 +57,12 @@ export default function LoginPage() {
             {error && (
               <Alert variant="destructive">
                 <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
+            {success && (
+              <Alert>
+                <MailCheck className="h-4 w-4" />
+                <AlertDescription>{success}</AlertDescription>
               </Alert>
             )}
             <div className="space-y-2">
@@ -99,31 +74,20 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
+                disabled={loading || Boolean(success)}
+                autoComplete="email"
               />
             </div>
           </CardContent>
           <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={loading}>
+            <Button type="submit" className="w-full" disabled={loading || Boolean(success)}>
               {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading ? 'Signing in…' : 'Sign in'}
+              {loading ? 'Sending link...' : 'Send secure sign-in link'}
             </Button>
             <p className="text-sm text-muted-foreground text-center">
-              Don&apos;t have an account?{' '}
+              New here?{' '}
               <Link href="/auth/sign-up" className="text-primary hover:underline">
-                Sign up
+                Join with your invited email
               </Link>
             </p>
           </CardFooter>
