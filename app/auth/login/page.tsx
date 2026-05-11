@@ -85,10 +85,7 @@ export default function LoginPage() {
               {loading ? 'Sending link...' : 'Send secure sign-in link'}
             </Button>
             <p className="text-sm text-muted-foreground text-center">
-              New here?{' '}
-              <Link href="/auth/sign-up" className="text-primary hover:underline">
-                Join with your invited email
-              </Link>
+              Invited family members use the email address their invite was sent to.
             </p>
           </CardFooter>
         </form>
