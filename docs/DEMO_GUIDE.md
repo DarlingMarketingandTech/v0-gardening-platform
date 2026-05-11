@@ -1,10 +1,24 @@
 # Demo Guide and Onboarding Plan
 
-The app needs a gentle guided path so Momma D understands what it can do without feeling like she has to learn software.
+Do not build a demo walkthrough yet.
+
+This document exists so we know what the eventual guide should do after the core app structure exists. The guide should teach the finished core loop, not compensate for unfinished navigation.
+
+## Build timing
+
+The demo/onboarding guide should come after these exist:
+
+1. Today screen
+2. Garden zones
+3. Simple Log flow
+4. Guide/resource area
+5. Clear mobile navigation
+
+Until then, do not spend implementation time on a walkthrough, tour overlay, or demo room.
 
 ## Goal
 
-Help Momma D open the app and quickly understand:
+When built later, the guide should help Momma D quickly understand:
 
 - what the app is for
 - what she should check first
@@ -31,9 +45,9 @@ Prefer:
 - “Tap this when you notice something.”
 - “The science is there when you want it.”
 
-## First-run walkthrough
+## Future first-run walkthrough
 
-The first-run guide should be short. Recommended flow:
+The first-run guide should be short. Recommended flow after the core app exists:
 
 ### Step 1: Welcome
 
@@ -87,24 +101,26 @@ Primary action: Go to Today
 
 ## Returning-user guide
 
-The Guide area should contain a short “How to use this app” section:
+The Guide area should eventually contain a short “How to use this app” section:
 
 1. Check Today first.
 2. Look at Garden when deciding where something goes.
 3. Use Log when something changes.
 4. Open Guide when you want the why.
 
-## Demo mode
+## Demo/prototype mode
 
-Before real persistence is rebuilt, the app should make demo mode obvious but not ugly.
+Prototype data can be public while the UX is being shaped. Real persisted Momma D garden data must be private and protected.
+
+Before real persistence is rebuilt, the app can label prototype data gently.
 
 Recommended copy:
 
-- “Demo garden plan”
-- “This is a sample layout based on Momma D’s backyard.”
-- “Real saved data comes later.”
+- “Sample garden plan”
+- “This preview is based on Momma D’s backyard structure.”
+- “Real saved garden data comes later.”
 
-Avoid making demo mode feel broken or temporary. It should feel like a guided preview.
+Avoid making prototype mode feel broken or temporary. It should feel like a useful preview.
 
 ## Progressive disclosure
 
@@ -119,7 +135,7 @@ Use layers:
 
 ## Help prompts
 
-Small contextual prompts can help:
+Small contextual prompts can help later:
 
 - On Today: “Start here when you only have a minute.”
 - On Garden: “Plants behave differently in pots, ground beds, and raised beds.”
