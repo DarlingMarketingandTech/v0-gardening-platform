@@ -33,7 +33,7 @@ export default function Home() {
                 <Link href="/my-garden">Open the Garden</Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href="/tools">Explore Garden Tools</Link>
+                <Link href="/my-garden">Explore Garden Tools</Link>
               </Button>
             </div>
           </div>
