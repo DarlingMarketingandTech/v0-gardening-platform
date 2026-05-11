@@ -1,78 +1,95 @@
-'use client'
-
-import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/server'
+import { getHouseholdId, getGardenAreas, ensureDefaultGardenAreas } from '@/lib/actions/garden'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Plus, Sprout, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import { redirect } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { GardenCard } from '@/components/garden-card'
-import { Button } from '@/components/ui/button'
-import { Card, CardContent } from '@/components/ui/card'
-import { Plus, Sprout } from 'lucide-react'
-import type { Garden } from '@/lib/types'
 
-export default function GardensPage() {
-  const [gardens, setGardens] = useState<Garden[]>([])
-  const [loading, setLoading] = useState(true)
-
-  // Load gardens from localStorage
-  useEffect(() => {
-    const saved = localStorage.getItem('mommaGardens')
-    if (saved) {
-      try {
-        setGardens(JSON.parse(saved))
-      } catch {
-        setGardens([])
-      }
-    }
-    setLoading(false)
-  }, [])
-
+export default async function GardensPage() {
+  const supabase = await createClient()
+  
+  // Get current user
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+  
+  if (!user) {
+    redirect('/auth/login')
+  }
+  
+  // Get user's household
+  const { householdId, error: householdError } = await getHouseholdId(user.id)
+  
+  if (!householdId) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <main className="flex-1 container py-12 px-4">
+          <div className="flex items-start gap-3 p-4 border border-amber-200 bg-amber-50 dark:bg-amber-950/20 dark:border-amber-900 rounded-lg">
+            <AlertCircle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+            <div>
+              <h3 className="font-semibold text-amber-900 dark:text-amber-200">Household not found</h3>
+              <p className="text-sm text-amber-800 dark:text-amber-300">Please contact your garden admin.</p>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    )
+  }
+  
+  // Ensure default garden areas exist
+  await ensureDefaultGardenAreas(householdId)
+  
+  // Fetch garden areas
+  const { areas } = await getGardenAreas(householdId)
+  
   return (
     <div className="min-h-screen flex flex-col">
       <Header />
       
-      <main className="flex-1 container px-4 py-8">
+      <main className="flex-1 container py-8 px-4">
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold mb-2">My Gardens</h1>
-            <p className="text-muted-foreground">
-              Manage and organize all your garden spaces.
-            </p>
+            <h1 className="text-3xl font-bold mb-2">Garden Areas</h1>
+            <p className="text-muted-foreground">Organize your garden by location and type</p>
           </div>
           <Button asChild>
             <Link href="/gardens/new">
               <Plus className="h-4 w-4 mr-2" />
-              New Garden
+              New Area
             </Link>
           </Button>
         </div>
-
-        {!loading && gardens && gardens.length > 0 ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {gardens.map((garden: Garden) => (
-              <GardenCard 
-                key={garden.id} 
-                garden={garden} 
-                plantCount={0}
-              />
-            ))}
-          </div>
-        ) : (
-          <Card className="text-center py-16">
-            <CardContent>
-              <Sprout className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
-              <h3 className="font-semibold text-xl mb-2">No gardens yet</h3>
-              <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-                Create your first garden to start planning your plants and tracking your growing journey.
-              </p>
-              <Button size="lg" asChild>
-                <Link href="/gardens/new">
-                  <Plus className="h-4 w-4 mr-2" />
-                  Create Your First Garden
-                </Link>
+        
+        {areas.length === 0 ? (
+          <Card className="border-dashed">
+            <CardContent className="pt-12 pb-12 text-center">
+              <Sprout className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <p className="text-muted-foreground mb-4">No garden areas yet</p>
+              <Button asChild variant="outline">
+                <Link href="/gardens/new">Create your first area</Link>
               </Button>
             </CardContent>
           </Card>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {areas.map((area: any) => (
+              <Link key={area.id} href={`/gardens/${area.id}`}>
+                <Card className="cursor-pointer hover:shadow-md transition-shadow h-full">
+                  <CardHeader>
+                    <CardTitle className="text-lg">{area.name}</CardTitle>
+                    {area.description && (
+                      <CardDescription>{area.description}</CardDescription>
+                    )}
+                  </CardHeader>
+                </Card>
+              </Link>
+            ))}
+          </div>
         )}
       </main>
       

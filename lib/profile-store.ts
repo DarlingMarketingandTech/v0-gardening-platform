@@ -1,98 +1,69 @@
 "use client"
 
-export interface MomProfile {
-  name: string
-  address: string
-  city: string
-  state: string
-  zipCode: string
-  latitude: number | null
-  longitude: number | null
-  timezone: string
-  gardenName: string
-  experienceLevel: 'beginner' | 'intermediate' | 'advanced'
-  climateZone?: string
-  setupComplete: boolean
+// Profile store now only manages UI preferences
+// Real user/household data comes from Supabase auth and household_members table
+
+interface UIPreferences {
+  sidebarCollapsed: boolean
+  theme: 'light' | 'dark' | 'system'
+  dismissedMessages: string[]
 }
 
-const DEFAULT_PROFILE: MomProfile = {
-  name: '',
-  address: '',
-  city: '',
-  state: '',
-  zipCode: '',
-  latitude: null,
-  longitude: null,
-  timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-  gardenName: "Mom's Garden",
-  experienceLevel: 'beginner',
-  climateZone: undefined,
-  setupComplete: false,
+const defaultPreferences: UIPreferences = {
+  sidebarCollapsed: false,
+  theme: 'system',
+  dismissedMessages: [],
 }
 
-const STORAGE_KEY = 'momma-d-profile'
+const STORAGE_KEY = 'momma-garden-ui'
 
-export function getProfile(): MomProfile {
-  if (typeof window === 'undefined') return DEFAULT_PROFILE
-  
+export function getUIPreferences(): UIPreferences {
+  if (typeof window === 'undefined') {
+    return defaultPreferences
+  }
+
   try {
     const stored = localStorage.getItem(STORAGE_KEY)
     if (stored) {
-      return { ...DEFAULT_PROFILE, ...JSON.parse(stored) }
+      return { ...defaultPreferences, ...JSON.parse(stored) }
     }
   } catch (e) {
-    console.error('Error reading profile:', e)
+    console.error('Error reading UI preferences:', e)
   }
-  
-  return DEFAULT_PROFILE
+
+  return defaultPreferences
 }
 
-export function saveProfile(profile: Partial<MomProfile>): MomProfile {
-  const current = getProfile()
-  const updated = { ...current, ...profile }
-  
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(updated))
-  } catch (e) {
-    console.error('Error saving profile:', e)
+export function setUIPreference<K extends keyof UIPreferences>(
+  key: K,
+  value: UIPreferences[K]
+) {
+  if (typeof window === 'undefined') {
+    return
   }
-  
-  return updated
-}
 
-export function clearProfile(): void {
   try {
-    localStorage.removeItem(STORAGE_KEY)
+    const prefs = getUIPreferences()
+    prefs[key] = value
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(prefs))
   } catch (e) {
-    console.error('Error clearing profile:', e)
+    console.error('Error saving UI preferences:', e)
   }
 }
 
-// Geocode address using Nominatim (free, no API key needed)
-export async function geocodeAddress(address: string, city: string, state: string, zipCode: string): Promise<{ lat: number; lon: number } | null> {
-  const query = encodeURIComponent(`${address}, ${city}, ${state} ${zipCode}, USA`)
-  
-  try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`,
-      {
-        headers: {
-          'User-Agent': 'MommaDGardenTool/1.0'
-        }
-      }
-    )
-    
-    const data = await response.json()
-    
-    if (data && data.length > 0) {
-      return {
-        lat: parseFloat(data[0].lat),
-        lon: parseFloat(data[0].lon)
-      }
-    }
-  } catch (e) {
-    console.error('Geocoding error:', e)
+export function toggleSidebar() {
+  const prefs = getUIPreferences()
+  setUIPreference('sidebarCollapsed', !prefs.sidebarCollapsed)
+}
+
+export function dismissMessage(messageId: string) {
+  const prefs = getUIPreferences()
+  if (!prefs.dismissedMessages.includes(messageId)) {
+    prefs.dismissedMessages.push(messageId)
+    setUIPreference('dismissedMessages', prefs.dismissedMessages)
   }
-  
-  return null
+}
+
+export function setTheme(theme: 'light' | 'dark' | 'system') {
+  setUIPreference('theme', theme)
 }
