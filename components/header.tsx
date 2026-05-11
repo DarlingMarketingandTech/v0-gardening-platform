@@ -18,9 +18,9 @@ import { createClient } from '@/lib/supabase/client'
 import type { User as SupabaseUser } from '@supabase/supabase-js'
 
 const navLinks = [
-  { href: '/dashboard', label: 'Dashboard' },
+  { href: '/my-garden', label: 'My Garden' },
+  { href: '/gardens', label: 'Garden Areas' },
   { href: '/plants', label: 'Plants' },
-  { href: '/gardens', label: 'Gardens' },
 ]
 
 interface HeaderProps {

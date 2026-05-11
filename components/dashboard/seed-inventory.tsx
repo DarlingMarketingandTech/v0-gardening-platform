@@ -10,7 +10,6 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Trash2, Plus, Snowflake, Calendar, Package, AlertTriangle, Sprout } from 'lucide-react'
-import { getProfile } from '@/lib/profile-store'
 import { cn } from '@/lib/utils'
 
 interface Seed {
@@ -110,30 +109,14 @@ export function SeedInventory() {
       }
     }
 
-    // Get frost date from profile climate zone
-    const profile = getProfile()
-    if (profile?.climateZone) {
-      const zone = profile.climateZone.replace(/[ab]/i, '')
-      const frostInfo = defaultFrostDates[zone]
-      if (frostInfo) {
-        const year = new Date().getFullYear()
-        const [month, day] = frostInfo.lastFrost.split('-')
-        const lastFrostDate = new Date(year, parseInt(month) - 1, parseInt(day))
-        // If we're past this year's frost date, use next year
-        if (lastFrostDate < new Date()) {
-          lastFrostDate.setFullYear(year + 1)
-        }
-        setFrostDate(lastFrostDate)
-      }
-    } else {
-      // Default to Zone 6 if no profile
-      const year = new Date().getFullYear()
-      let lastFrostDate = new Date(year, 3, 1) // April 1
-      if (lastFrostDate < new Date()) {
-        lastFrostDate = new Date(year + 1, 3, 1)
-      }
-      setFrostDate(lastFrostDate)
+    // Get frost date - use default Zone 6
+    // Default to Zone 6 if no climate data available
+    const year = new Date().getFullYear()
+    let lastFrostDate = new Date(year, 3, 1) // April 1
+    if (lastFrostDate < new Date()) {
+      lastFrostDate = new Date(year + 1, 3, 1)
     }
+    setFrostDate(lastFrostDate)
   }, [])
 
   // Save to localStorage

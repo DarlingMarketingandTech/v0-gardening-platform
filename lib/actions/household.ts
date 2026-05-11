@@ -67,8 +67,57 @@ export async function acceptFamilyInvite(email: string, userId: string, displayN
 }
 
 /**
- * Get the user's household ID
+ * Link an existing user to their household if they're not already linked
+ * Called after login if the user hasn't been added to household_members yet
  */
+export async function ensureHouseholdMembership(email: string, userId: string) {
+  const supabase = await createClient()
+
+  // Check if user already has household membership
+  const { data: existing } = await supabase
+    .from('household_members')
+    .select('household_id')
+    .eq('user_id', userId)
+    .single()
+
+  if (existing) {
+    return { success: true, household_id: existing.household_id }
+  }
+
+  // Check if there's an invite for this email
+  const { data: invite, error: inviteError } = await supabase
+    .from('family_invites')
+    .select('household_id, role')
+    .eq('email', email.toLowerCase())
+    .single()
+
+  if (inviteError || !invite) {
+    return { success: false, error: 'No household invite found' }
+  }
+
+  // Add user to household
+  const { error: memberError } = await supabase
+    .from('household_members')
+    .insert({
+      household_id: invite.household_id,
+      user_id: userId,
+      role: invite.role,
+      display_name: email.split('@')[0],
+    })
+
+  if (memberError) {
+    return { success: false, error: memberError.message }
+  }
+
+  // Mark invite as accepted if not already accepted
+  await supabase
+    .from('family_invites')
+    .update({ accepted_at: new Date().toISOString() })
+    .eq('email', email.toLowerCase())
+    .is('accepted_at', null)
+
+  return { success: true, household_id: invite.household_id }
+}
 export async function getUserHousehold() {
   const supabase = await createClient()
 
