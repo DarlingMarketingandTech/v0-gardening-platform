@@ -23,7 +23,7 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const result = await sendGardenMagicLink(email)
+      const result = await sendGardenMagicLink(email, window.location.origin)
 
       if (!result.success) {
         setError(result.error ?? 'We could not send your garden sign-in link.')
