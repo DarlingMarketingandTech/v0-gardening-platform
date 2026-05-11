@@ -21,24 +21,21 @@ type AcceptFamilyInviteRow = {
 }
 
 const MEMBERSHIP_CONNECT_ERROR =
-  "You signed in, but we could not connect you to Momma D's Garden. Please check your invite setup."
+  "We could not connect you to Momma D's Garden. Please check your invite setup."
 
 /**
- * Check if an email has a family invite and get household details (SECURITY DEFINER RPC).
+ * Check if an email has a family invite and get household details.
+ * This intentionally goes through the SECURITY DEFINER RPC so clients do not
+ * read family_invites directly.
  */
 export async function checkFamilyInvite(email: string) {
   const supabase = await createClient()
   const normalized = normalizeEmail(email)
 
   const { data, error } = await supabase.rpc('check_family_invite', { invite_email: normalized }).single()
-
   const row = data as CheckFamilyInviteRow | null
 
-  if (error || !row) {
-    return { invited: false, household_id: null, role: null, household_name: null }
-  }
-
-  if (!row.invited) {
+  if (error || !row || !row.invited) {
     return { invited: false, household_id: null, role: null, household_name: null }
   }
 
@@ -51,7 +48,104 @@ export async function checkFamilyInvite(email: string) {
 }
 
 /**
- * Accept a family invite and create household member record after user signs up.
+ * Send a passwordless Supabase magic link after checking the family invite.
+ * Login should authenticate only; household attachment happens after callback.
+ */
+export async function sendGardenMagicLink(email: string) {
+  const supabase = await createClient()
+  const normalized = normalizeEmail(email)
+
+  if (!normalized) {
+    return { success: false, error: 'Enter your email address.' }
+  }
+
+  const invite = await checkFamilyInvite(normalized)
+  if (!invite.invited) {
+    return {
+      success: false,
+      error: `${normalized} is not invited to Momma D's Garden. Please contact the garden admin.`,
+    }
+  }
+
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` ||
+    process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}` ||
+    'http://localhost:3000'
+
+  const { error } = await supabase.auth.signInWithOtp({
+    email: normalized,
+    options: {
+      shouldCreateUser: true,
+      emailRedirectTo: `${siteUrl}/auth/callback?next=/my-garden`,
+    },
+  })
+
+  if (error) {
+    return { success: false, error: error.message }
+  }
+
+  return {
+    success: true,
+    message: `Check ${normalized} for your garden sign-in link.`,
+  }
+}
+
+/**
+ * Accept a family invite for the currently authenticated user.
+ * Use this from the auth callback or onboarding only, never from login submit.
+ */
+export async function claimCurrentUserInvite(displayName?: string | null) {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+    error: userError,
+  } = await supabase.auth.getUser()
+
+  if (userError || !user?.email) {
+    return { success: false, error: 'You need to sign in before joining the garden.' }
+  }
+
+  const existing = await getUserHousehold()
+  if (existing.household_id) {
+    return { success: true, household_id: existing.household_id, role: existing.role }
+  }
+
+  const normalized = normalizeEmail(user.email)
+  const fallbackDisplay =
+    (typeof displayName === 'string' && displayName.trim()) ||
+    (typeof user.user_metadata?.full_name === 'string' && user.user_metadata.full_name.trim()) ||
+    normalized.split('@')[0] ||
+    ''
+
+  const { data, error } = await supabase
+    .rpc('accept_family_invite', {
+      invite_email: normalized,
+      new_user_id: user.id,
+      display_name: fallbackDisplay,
+    })
+    .single()
+
+  const row = data as AcceptFamilyInviteRow | null
+
+  if (error) {
+    return { success: false, error: MEMBERSHIP_CONNECT_ERROR }
+  }
+
+  if (!row?.success) {
+    return {
+      success: false,
+      error: row?.error_message ?? MEMBERSHIP_CONNECT_ERROR,
+    }
+  }
+
+  return { success: true, household_id: row.household_id, role: row.role }
+}
+
+/**
+ * Backwards-compatible wrapper for old imports. Login should not call this;
+ * use claimCurrentUserInvite after Supabase has established a server session.
  */
 export async function acceptFamilyInvite(email: string, userId: string, displayName: string) {
   const supabase = await createClient()
@@ -75,69 +169,6 @@ export async function acceptFamilyInvite(email: string, userId: string, displayN
     return {
       success: false,
       error: row?.error_message ?? 'Failed to join household',
-    }
-  }
-
-  return { success: true, household_id: row.household_id }
-}
-
-/**
- * Link an existing user to their household if they're not already linked.
- * Called after login if the user hasn't been added to household_members yet.
- */
-export async function ensureHouseholdMembership(
-  email: string,
-  userId: string,
-  displayName?: string | null,
-) {
-  const supabase = await createClient()
-  const normalized = normalizeEmail(email)
-
-  const { data: existing } = await supabase
-    .from('household_members')
-    .select('household_id')
-    .eq('user_id', userId)
-    .maybeSingle()
-
-  if (existing?.household_id) {
-    return { success: true, household_id: existing.household_id }
-  }
-
-  const fallbackDisplay =
-    (typeof displayName === 'string' && displayName.trim()) || normalized.split('@')[0] || ''
-
-  const { data, error } = await supabase
-    .rpc('accept_family_invite', {
-      invite_email: normalized,
-      new_user_id: userId,
-      display_name: fallbackDisplay,
-    })
-    .single()
-
-  const row = data as AcceptFamilyInviteRow | null
-
-  if (error) {
-    const msg = error.message.toLowerCase()
-    if (msg.includes('recursion') || msg.includes('infinite')) {
-      return {
-        success: false,
-        error:
-          'We could not connect you to the garden because of a server configuration problem. Please contact the garden admin.',
-      }
-    }
-    return { success: false, error: MEMBERSHIP_CONNECT_ERROR }
-  }
-
-  if (!row?.success) {
-    if (row?.error_message === 'No household invite found') {
-      return {
-        success: false,
-        error: MEMBERSHIP_CONNECT_ERROR,
-      }
-    }
-    return {
-      success: false,
-      error: row?.error_message ?? MEMBERSHIP_CONNECT_ERROR,
     }
   }
 
