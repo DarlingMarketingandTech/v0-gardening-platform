@@ -6,6 +6,36 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
 }
 
+function getSiteOrigin() {
+  const rawOrigin =
+    process.env.NEXT_PUBLIC_SITE_URL ||
+    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '') ||
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
+    'http://localhost:3000'
+
+  const withProtocol = /^https?:\/\//i.test(rawOrigin) ? rawOrigin : `https://${rawOrigin}`
+
+  try {
+    return new URL(withProtocol).origin
+  } catch {
+    return 'http://localhost:3000'
+  }
+}
+
+function getSafeMembershipError(errorMessage?: string | null) {
+  switch (errorMessage) {
+    case 'No household invite found':
+      return "This email is not currently invited to Momma D's Garden. Please contact the garden admin."
+    case 'Email does not match this account':
+      return 'This invite does not match the signed-in email address.'
+    case 'Unauthorized':
+    case 'User not found':
+      return 'Please request a fresh garden sign-in link and try again.'
+    default:
+      return MEMBERSHIP_CONNECT_ERROR
+  }
+}
+
 type CheckFamilyInviteRow = {
   invited: boolean
   household_id: string | null
@@ -67,17 +97,14 @@ export async function sendGardenMagicLink(email: string) {
     }
   }
 
-  const siteUrl =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    process.env.VERCEL_PROJECT_PRODUCTION_URL && `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` ||
-    process.env.VERCEL_URL && `https://${process.env.VERCEL_URL}` ||
-    'http://localhost:3000'
+  const emailRedirectTo = new URL('/auth/callback', getSiteOrigin())
+  emailRedirectTo.searchParams.set('next', '/my-garden')
 
   const { error } = await supabase.auth.signInWithOtp({
     email: normalized,
     options: {
       shouldCreateUser: true,
-      emailRedirectTo: `${siteUrl}/auth/callback?next=/my-garden`,
+      emailRedirectTo: emailRedirectTo.toString(),
     },
   })
 
@@ -136,7 +163,7 @@ export async function claimCurrentUserInvite(displayName?: string | null) {
   if (!row?.success) {
     return {
       success: false,
-      error: row?.error_message ?? MEMBERSHIP_CONNECT_ERROR,
+      error: getSafeMembershipError(row?.error_message),
     }
   }
 
@@ -168,7 +195,7 @@ export async function acceptFamilyInvite(email: string, userId: string, displayN
   if (!row?.success) {
     return {
       success: false,
-      error: row?.error_message ?? 'Failed to join household',
+      error: getSafeMembershipError(row?.error_message),
     }
   }
 
