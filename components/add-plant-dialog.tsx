@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useState, useTransition, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { searchPermaPlants } from '@/lib/permapeople'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -15,8 +16,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog'
-import { Plus, Loader2 } from 'lucide-react'
+import { ScrollArea } from '@/components/ui/scroll-area'
+import { Plus, Loader2, Search } from 'lucide-react'
 import { toast } from 'sonner'
+import type { PermaPlantResult } from '@/lib/permapeople'
 
 interface AddPlantDialogProps {
   gardenAreaId: string
@@ -26,13 +29,41 @@ interface AddPlantDialogProps {
 export function AddPlantDialog({ gardenAreaId, variant = 'default' }: AddPlantDialogProps) {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(1)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [searchResults, setSearchResults] = useState<PermaPlantResult[]>([])
+  const [selectedPlant, setSelectedPlant] = useState<PermaPlantResult | null>(null)
   const [customName, setCustomName] = useState('')
   const [quantity, setQuantity] = useState('1')
   const [plantedDate, setPlantedDate] = useState(new Date().toISOString().split('T')[0])
   const [notes, setNotes] = useState('')
+  const [searching, setSearching] = useState(false)
   const [isPending, startTransition] = useTransition()
   const router = useRouter()
   const supabase = createClient()
+
+  // Search PermaPeople when query changes
+  useEffect(() => {
+    const searchTimer = setTimeout(async () => {
+      if (searchQuery.trim()) {
+        setSearching(true)
+        const results = await searchPermaPlants(searchQuery)
+        setSearchResults(results)
+        setSearching(false)
+      } else {
+        setSearchResults([])
+      }
+    }, 500)
+
+    return () => clearTimeout(searchTimer)
+  }, [searchQuery])
+
+  const handleSelectPlant = (plant: PermaPlantResult) => {
+    setSelectedPlant(plant)
+    setCustomName(plant.name)
+    setSearchResults([])
+    setSearchQuery('')
+    setStep(2)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -83,6 +114,9 @@ export function AddPlantDialog({ gardenAreaId, variant = 'default' }: AddPlantDi
 
   const resetForm = () => {
     setStep(1)
+    setSearchQuery('')
+    setSearchResults([])
+    setSelectedPlant(null)
     setCustomName('')
     setQuantity('1')
     setPlantedDate(new Date().toISOString().split('T')[0])
@@ -101,7 +135,7 @@ export function AddPlantDialog({ gardenAreaId, variant = 'default' }: AddPlantDi
         <DialogHeader>
           <DialogTitle>Add Plant to Area</DialogTitle>
           <DialogDescription>
-            {step === 1 && 'What did you plant?'}
+            {step === 1 && 'Search for a plant or enter a custom name'}
             {step === 2 && 'When did you plant it?'}
             {step === 3 && 'Add any notes (optional)'}
           </DialogDescription>
@@ -109,15 +143,69 @@ export function AddPlantDialog({ gardenAreaId, variant = 'default' }: AddPlantDi
 
         <form onSubmit={handleSubmit} className="space-y-4">
           {step === 1 && (
-            <div className="space-y-2">
-              <Label htmlFor="customName">Plant Name or Type *</Label>
-              <Input
-                id="customName"
-                placeholder="e.g., Cherry Tomatoes, Basil, Zucchini"
-                value={customName}
-                onChange={(e) => setCustomName(e.target.value)}
-                autoFocus
-              />
+            <div className="space-y-3">
+              <div className="space-y-2">
+                <Label htmlFor="searchQuery">Search Plants</Label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    id="searchQuery"
+                    placeholder="e.g., Tomato, Basil, Zucchini"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-9"
+                    autoFocus
+                  />
+                </div>
+              </div>
+
+              {searching && (
+                <div className="flex items-center justify-center py-4">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <span className="ml-2 text-sm text-muted-foreground">Searching...</span>
+                </div>
+              )}
+
+              {searchResults.length > 0 && (
+                <ScrollArea className="border rounded-md p-2 max-h-48">
+                  <div className="space-y-2">
+                    {searchResults.map((plant) => (
+                      <button
+                        key={plant.id}
+                        type="button"
+                        onClick={() => handleSelectPlant(plant)}
+                        className="w-full text-left p-2 hover:bg-muted rounded-md transition-colors"
+                      >
+                        <div className="font-medium text-sm">{plant.name}</div>
+                        {plant.scientific_name && (
+                          <div className="text-xs text-muted-foreground italic">
+                            {plant.scientific_name}
+                          </div>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+
+              {searchQuery && !searching && searchResults.length === 0 && (
+                <div className="text-sm text-muted-foreground p-2 text-center">
+                  No plants found. You can still add a custom plant name below.
+                </div>
+              )}
+
+              {!searchQuery && (
+                <div className="space-y-2">
+                  <Label htmlFor="customName">Or enter a custom plant name *</Label>
+                  <Input
+                    id="customName"
+                    placeholder="e.g., My Cherry Tomatoes, Kitchen Basil"
+                    value={customName}
+                    onChange={(e) => setCustomName(e.target.value)}
+                  />
+                </div>
+              )}
+
               <div className="space-y-2 pt-2">
                 <Label htmlFor="quantity">Quantity</Label>
                 <Input
@@ -173,7 +261,7 @@ export function AddPlantDialog({ gardenAreaId, variant = 'default' }: AddPlantDi
                 type="button" 
                 onClick={() => {
                   if (step === 1 && !customName.trim()) {
-                    toast.error('Please enter a plant name')
+                    toast.error('Please enter or select a plant name')
                     return
                   }
                   setStep(step + 1)
