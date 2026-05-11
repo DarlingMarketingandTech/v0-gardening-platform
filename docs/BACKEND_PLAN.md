@@ -16,12 +16,25 @@ The backend should eventually store:
 
 It should power helpful guidance without requiring Momma D to configure a complex system.
 
+## Prototype data versus real data
+
+There are two separate modes:
+
+1. Prototype/demo mode
+2. Real persisted family garden mode
+
+Prototype/demo data can be public while we are shaping the UX. It should not contain private family notes, real user identifiers, private photos, or household data.
+
+Real persisted Momma D garden data must be private, household-scoped, and protected before it is exposed through the app.
+
+This distinction matters because the current design-first reset removed the auth gate to speed up product shaping. That does not mean real private garden data should ever be public.
+
 ## Backend non-goals for v1
 
 Do not prioritize:
 
-- family account management
-- complex roles and permissions
+- family account management screens
+- complex roles and permissions UI
 - marketplace/provider data
 - full notification automation
 - complex analytics
@@ -179,13 +192,16 @@ AI can later help summarize observations, answer questions, and generate explana
 
 ## Auth direction
 
-Auth should remain out of the critical path until the product is useful.
+Auth should remain out of the prototype critical path until the product shape is useful.
+
+Auth must return before real persisted family garden data is exposed.
 
 Possible later approach:
 
 - single household garden
-- simple magic link or passcode
-- no complex invite flow initially
+- simple invite-only access
+- simple magic link or household passcode if appropriate
+- no complex invite-management UI initially
 - service-role-only admin operations hidden from UI
 
 ## Data safety
@@ -193,18 +209,21 @@ Possible later approach:
 When persistence returns:
 
 - keep RLS simple
+- protect real family garden data behind household access
 - avoid exposing SECURITY DEFINER RPCs casually
 - separate public plant knowledge from private garden observations
 - use server actions/API routes for sensitive operations
+- never expose private notes, photos, household ids, or user ids in public demo views
 
 ## Backend implementation order
 
-1. Keep demo data until UI is stable.
-2. Convert demo data shapes into schema draft.
+1. Keep prototype data until UI is stable.
+2. Convert prototype data shapes into schema draft.
 3. Add Supabase tables for garden_zones, plantings, tasks, observations.
-4. Read from Supabase without auth gate, using a single demo garden id if needed.
-5. Add create/update actions only for the simplest log/task flows.
-6. Add auth only after Momma D can use the core app.
+4. Read only harmless prototype data publicly while UX is still being shaped.
+5. Before reading real family garden data, restore private household access.
+6. Add create/update actions only for the simplest log/task flows.
+7. Add fuller auth flows only after Momma D can use the core app.
 
 ## Backend principle
 
