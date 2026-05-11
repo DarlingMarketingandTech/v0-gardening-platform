@@ -24,10 +24,16 @@ export default function SignUpPage() {
 
   const handleEmailBlur = async () => {
     if (email) {
-      const invite = await checkFamilyInvite(email)
-      setInviteInfo(invite)
+      const normalized = email.trim().toLowerCase()
+      const invite = await checkFamilyInvite(normalized)
+      setInviteInfo({
+        invited: invite.invited,
+        household_name: invite.household_name ?? undefined,
+      })
       if (!invite.invited) {
-        setError(`${email} is not invited to Momma D's Garden. Please contact the garden admin.`)
+        setError(
+          `${normalized} is not invited to Momma D's Garden. Please contact the garden admin.`,
+        )
       } else {
         setError(null)
       }
@@ -39,58 +45,66 @@ export default function SignUpPage() {
     setError(null)
     setLoading(true)
 
-    // Verify invite one more time before signup
-    const invite = await checkFamilyInvite(email)
-    if (!invite.invited) {
-      setError(`${email} is not invited to Momma D's Garden.`)
-      setLoading(false)
-      return
-    }
+    const normalizedEmail = email.trim().toLowerCase()
 
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          full_name: fullName,
+    try {
+      // Verify invite one more time before signup
+      const invite = await checkFamilyInvite(normalizedEmail)
+      if (!invite.invited) {
+        setError(`${normalizedEmail} is not invited to Momma D's Garden.`)
+        return
+      }
+
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: normalizedEmail,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+          },
         },
-      },
-    })
+      })
 
-    if (error) {
-      setError(error.message)
+      if (signUpError) {
+        setError(signUpError.message)
+        return
+      }
+
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      if (!user) {
+        setError('Failed to create account. If email confirmation is required, confirm your email and sign in.')
+        return
+      }
+
+      const { success: acceptSuccess, error: acceptError } = await acceptFamilyInvite(
+        normalizedEmail,
+        user.id,
+        fullName,
+      )
+      if (!acceptSuccess) {
+        setError(acceptError || 'Failed to join household')
+        return
+      }
+
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      })
+      if (signInError) {
+        setError(signInError.message)
+        return
+      }
+
+      router.push('/my-garden')
+      router.refresh()
+    } catch (err) {
+      console.error('Sign up failed:', err)
+      setError('Sign up did not finish. Please try again.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    // Get the session
-    const {
-      data: { user },
-    } = await supabase.auth.getUser()
-    if (!user) {
-      setError('Failed to create account')
-      setLoading(false)
-      return
-    }
-
-    // Accept the invite and link to household
-    const { success: acceptSuccess, error: acceptError } = await acceptFamilyInvite(email, user.id, fullName)
-    if (!acceptSuccess) {
-      setError(acceptError || 'Failed to join household')
-      setLoading(false)
-      return
-    }
-
-    // Sign in immediately
-    const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
-    if (signInError) {
-      setError(signInError.message)
-      setLoading(false)
-      return
-    }
-
-    router.push('/my-garden')
-    router.refresh()
   }
 
   return (
