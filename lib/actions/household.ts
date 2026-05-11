@@ -6,20 +6,35 @@ function normalizeEmail(email: string) {
   return email.trim().toLowerCase()
 }
 
-function getSiteOrigin() {
-  const rawOrigin =
-    process.env.NEXT_PUBLIC_SITE_URL ||
-    (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : '') ||
-    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : '') ||
-    'http://localhost:3000'
+function getSiteOrigin(preferredOrigin?: string | null) {
+  const candidates = [
+    preferredOrigin,
+    process.env.NEXT_PUBLIC_SITE_URL,
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : null,
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null,
+    'http://localhost:3000',
+  ]
 
-  const withProtocol = /^https?:\/\//i.test(rawOrigin) ? rawOrigin : `https://${rawOrigin}`
+  for (const candidate of candidates) {
+    if (!candidate) continue
 
-  try {
-    return new URL(withProtocol).origin
-  } catch {
-    return 'http://localhost:3000'
+    const withProtocol = /^https?:\/\//i.test(candidate) ? candidate : `https://${candidate}`
+
+    try {
+      const url = new URL(withProtocol)
+      const isLocalhost = url.hostname === 'localhost' || url.hostname === '127.0.0.1'
+
+      if (url.protocol === 'http:' && !isLocalhost) {
+        continue
+      }
+
+      return url.origin
+    } catch {
+      continue
+    }
   }
+
+  return 'http://localhost:3000'
 }
 
 function getSafeMembershipError(errorMessage?: string | null) {
@@ -81,7 +96,7 @@ export async function checkFamilyInvite(email: string) {
  * Send a passwordless Supabase magic link after checking the family invite.
  * Login should authenticate only; household attachment happens after callback.
  */
-export async function sendGardenMagicLink(email: string) {
+export async function sendGardenMagicLink(email: string, redirectOrigin?: string) {
   const supabase = await createClient()
   const normalized = normalizeEmail(email)
 
@@ -97,7 +112,7 @@ export async function sendGardenMagicLink(email: string) {
     }
   }
 
-  const emailRedirectTo = new URL('/auth/callback', getSiteOrigin())
+  const emailRedirectTo = new URL('/auth/callback', getSiteOrigin(redirectOrigin))
   emailRedirectTo.searchParams.set('next', '/my-garden')
 
   const { error } = await supabase.auth.signInWithOtp({
