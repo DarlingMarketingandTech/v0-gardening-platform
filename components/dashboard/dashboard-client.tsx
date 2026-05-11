@@ -36,9 +36,10 @@ import type { Plant } from '@/lib/types'
 
 interface DashboardClientProps {
   plants: Plant[]
+  householdId?: string | null
 }
 
-export function DashboardClient({ plants }: DashboardClientProps) {
+export function DashboardClient({ plants, householdId }: DashboardClientProps) {
   const [activeTab, setActiveTab] = useState('home')
   const [isRainy, setIsRainy] = useState(false)
   const [profile, setProfile] = useState<MomProfile | null>(null)

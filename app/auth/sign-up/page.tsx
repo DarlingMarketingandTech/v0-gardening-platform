@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { checkFamilyInvite, acceptFamilyInvite } from '@/lib/actions/household'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,20 +18,39 @@ export default function SignUpPage() {
   const [fullName, setFullName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [inviteInfo, setInviteInfo] = useState<{ invited: boolean; household_name?: string } | null>(null)
   const router = useRouter()
   const supabase = createClient()
+
+  const handleEmailBlur = async () => {
+    if (email) {
+      const invite = await checkFamilyInvite(email)
+      setInviteInfo(invite)
+      if (!invite.invited) {
+        setError(`${email} is not invited to Momma D's Garden. Please contact the garden admin.`)
+      } else {
+        setError(null)
+      }
+    }
+  }
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setLoading(true)
 
+    // Verify invite one more time before signup
+    const invite = await checkFamilyInvite(email)
+    if (!invite.invited) {
+      setError(`${email} is not invited to Momma D's Garden.`)
+      setLoading(false)
+      return
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        // No emailRedirectTo — Supabase will not send a confirmation email
-        // when "Confirm email" is disabled in the Supabase dashboard.
         data: {
           full_name: fullName,
         },
@@ -43,7 +63,25 @@ export default function SignUpPage() {
       return
     }
 
-    // Sign the user in immediately after account creation
+    // Get the session
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+    if (!user) {
+      setError('Failed to create account')
+      setLoading(false)
+      return
+    }
+
+    // Accept the invite and link to household
+    const { success: acceptSuccess, error: acceptError } = await acceptFamilyInvite(email, user.id, fullName)
+    if (!acceptSuccess) {
+      setError(acceptError || 'Failed to join household')
+      setLoading(false)
+      return
+    }
+
+    // Sign in immediately
     const { error: signInError } = await supabase.auth.signInWithPassword({ email, password })
     if (signInError) {
       setError(signInError.message)
@@ -51,9 +89,8 @@ export default function SignUpPage() {
       return
     }
 
-    router.push('/dashboard')
+    router.push('/my-garden')
     router.refresh()
-  }
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background to-muted p-4">
@@ -63,9 +100,9 @@ export default function SignUpPage() {
             <Leaf className="h-8 w-8 text-primary" />
             <span className="text-2xl font-bold">Momma D&apos;s Garden</span>
           </Link>
-          <CardTitle className="text-2xl">Create your account</CardTitle>
+          <CardTitle className="text-2xl">Join Momma D&apos;s Garden</CardTitle>
           <CardDescription>
-            No email confirmation needed — you&apos;ll be in your garden right away.
+            Sign up to access the family garden notebook
           </CardDescription>
         </CardHeader>
         <form onSubmit={handleSignUp}>
@@ -95,9 +132,15 @@ export default function SignUpPage() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                onBlur={handleEmailBlur}
                 required
                 disabled={loading}
               />
+              {inviteInfo && inviteInfo.invited && (
+                <p className="text-sm text-green-600">
+                  ✓ You&apos;re invited to {inviteInfo.household_name}
+                </p>
+              )}
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>

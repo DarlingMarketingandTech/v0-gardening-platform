@@ -1,39 +1,19 @@
-"use client"
+import Link from 'next/link'
+import { Button } from '@/components/ui/button'
+import { Leaf } from 'lucide-react'
+import { createClient } from '@/lib/supabase/server'
 
-import { useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
-import Link from "next/link"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
-import { Flower2, Sun, Droplets, Leaf, ArrowRight, Loader2 } from "lucide-react"
-import { getProfile } from "@/lib/profile-store"
-
-export default function HomePage() {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(true)
-  const [profileName, setProfileName] = useState<string | null>(null)
-
-  useEffect(() => {
-    const profile = getProfile()
-    if (profile.setupComplete) {
-      setProfileName(profile.name)
-    }
-    setIsLoading(false)
-  }, [])
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-primary/5 to-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-      </div>
-    )
-  }
+export default async function Home() {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-accent/10">
       {/* Hero Section */}
       <section className="relative overflow-hidden py-20 md:py-32">
-        {/* Background Image - Sunset over the garden */}
+        {/* Background Image */}
         <div 
           className="absolute inset-0 bg-cover bg-center opacity-20"
           style={{
@@ -45,134 +25,44 @@ export default function HomePage() {
         <div className="container px-4 relative z-10">
           <div className="max-w-3xl mx-auto text-center">
             <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-primary/10 mb-6">
-              <Flower2 className="h-10 w-10 text-primary" />
+              <Leaf className="h-10 w-10 text-primary" />
             </div>
             
             <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-balance mb-6">
-              {profileName ? (
-                <>Welcome back, <span className="text-primary">{profileName}</span>!</>
-              ) : (
-                <>Momma D&apos;s <span className="text-primary">Garden Tool</span></>
-              )}
+              Momma D&apos;s <span className="text-primary">Garden</span>
             </h1>
             
             <p className="text-lg md:text-xl text-muted-foreground text-pretty mb-8 max-w-2xl mx-auto">
-              {profileName 
-                ? "Your personal gardening companion is ready. Check the weather, track your plants, and plan your garden."
-                : "Your personal gardening companion. Track plants, check weather, plan your garden, and grow with confidence."
+              {user 
+                ? "A private family garden notebook — tracking plants, sharing observations, and nurturing growth together"
+                : "A private family garden notebook designed for the Darling family to track plants, share observations, and nurture their garden together"
               }
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              {profileName ? (
+              {user ? (
                 <>
                   <Button size="lg" asChild>
-                    <Link href="/dashboard">
-                      Go to Dashboard
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
+                    <Link href="/my-garden">Go to Your Garden</Link>
                   </Button>
                   <Button size="lg" variant="outline" asChild>
-                    <Link href="/plants">Browse Plants</Link>
+                    <Link href="/settings">Settings</Link>
                   </Button>
                 </>
               ) : (
-                <Button size="lg" onClick={() => router.push('/setup')}>
-                  Get Started
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+                <>
+                  <Button size="lg" asChild>
+                    <Link href="/auth/sign-up">Join the Garden</Link>
+                  </Button>
+                  <Button size="lg" variant="outline" asChild>
+                    <Link href="/auth/login">Sign In</Link>
+                  </Button>
+                </>
               )}
             </div>
           </div>
         </div>
       </section>
-
-      {/* Garden Photo Showcase */}
-      <section className="py-12 px-4 bg-accent/20">
-        <div className="max-w-5xl mx-auto">
-          <h2 className="text-2xl font-bold text-center mb-8">From the Garden</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            {/* Raised bed with trellis */}
-            <div className="relative aspect-[4/3] rounded-xl overflow-hidden shadow-lg group">
-              <img 
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20220618_180911-PBDTHZW4x1HiwJrf0Vqz8sEWuvlZ2P.jpg"
-                alt="Raised bed garden with squash growing on a wooden trellis"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              <span className="absolute bottom-3 left-3 text-white text-sm font-medium">Summer Squash</span>
-            </div>
-            
-            {/* Garden with tomato cages */}
-            <div className="relative aspect-[4/3] rounded-xl overflow-hidden shadow-lg group">
-              <img 
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20230516_180831-vbTH4ec67CfLJIdGv2YjtQMBEQ5Qea.jpg"
-                alt="Garden bed with colorful tomato cages and herbs"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              <span className="absolute bottom-3 left-3 text-white text-sm font-medium">Spring Planting</span>
-            </div>
-            
-            {/* Banana peppers */}
-            <div className="relative aspect-[4/3] rounded-xl overflow-hidden shadow-lg group">
-              <img 
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20230706_185416-Iafs9Siq1WdrKnmdJhVyIscMoe5hhW.jpg"
-                alt="Banana peppers ripening on the vine"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
-              <span className="absolute bottom-3 left-3 text-white text-sm font-medium">Banana Peppers</span>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Preview */}
-      <section className="py-16 px-4">
-        <div className="max-w-4xl mx-auto grid md:grid-cols-3 gap-6">
-          <Card className="border-primary/20 shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="pt-6 text-center">
-              <div className="h-12 w-12 rounded-full bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center mx-auto mb-4">
-                <Sun className="h-6 w-6 text-yellow-600 dark:text-yellow-400" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Smart Weather</h3>
-              <p className="text-sm text-muted-foreground">
-                Local forecast, UV index, and watering recommendations based on your garden&apos;s location.
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-primary/20 shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="pt-6 text-center">
-              <div className="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mx-auto mb-4">
-                <Droplets className="h-6 w-6 text-blue-600 dark:text-blue-400" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Plant Tracker</h3>
-              <p className="text-sm text-muted-foreground">
-                Track your plants from seed to harvest with photos, notes, and care reminders.
-              </p>
-            </CardContent>
-          </Card>
-          
-          <Card className="border-primary/20 shadow-md hover:shadow-lg transition-shadow">
-            <CardContent className="pt-6 text-center">
-              <div className="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center mx-auto mb-4">
-                <Leaf className="h-6 w-6 text-green-600 dark:text-green-400" />
-              </div>
-              <h3 className="font-semibold text-lg mb-2">Garden Tasks</h3>
-              <p className="text-sm text-muted-foreground">
-                Smart task lists that adjust based on weather - skip watering on rainy days!
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
-
-      {/* Footer */}
-      <footer className="py-8 text-center text-sm text-muted-foreground">
-        <p>Made with love for Momma D</p>
-      </footer>
     </div>
   )
 }
