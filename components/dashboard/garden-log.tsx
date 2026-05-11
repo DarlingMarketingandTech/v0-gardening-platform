@@ -1,83 +1,128 @@
 'use client'
 
-import { useState, useRef, useEffect } from 'react'
+import { useEffect, useState } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Textarea } from '@/components/ui/textarea'
-import { Badge } from '@/components/ui/badge'
-import { ScrollArea } from '@/components/ui/scroll-area'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from '@/components/ui/dialog'
-import { 
-  BookHeart,
-  Camera,
-  Plus,
-  Image as ImageIcon,
-  Calendar,
-  Bug,
-  AlertTriangle,
-  Leaf,
-  Droplets,
-  Sun,
-  Trash2,
-  X
-} from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { Leaf, Plus } from 'lucide-react'
+import { toast } from 'sonner'
+import type { Observation } from '@/lib/types'
 
-interface LogEntry {
-  id: string
-  date: string
-  note: string
-  photos: string[]
-  type: 'general' | 'watering' | 'planting' | 'harvest' | 'pest' | 'weather'
-  pestAlert?: boolean
+interface GardenLogProps {
+  householdId: string
 }
 
-const entryTypeConfig = {
-  general: { icon: Leaf, color: 'text-emerald-500', bg: 'bg-emerald-50 dark:bg-emerald-950/30' },
-  watering: { icon: Droplets, color: 'text-blue-500', bg: 'bg-blue-50 dark:bg-blue-950/30' },
-  planting: { icon: Leaf, color: 'text-green-600', bg: 'bg-green-50 dark:bg-green-950/30' },
-  harvest: { icon: Sun, color: 'text-amber-500', bg: 'bg-amber-50 dark:bg-amber-950/30' },
-  pest: { icon: Bug, color: 'text-red-500', bg: 'bg-red-50 dark:bg-red-950/30' },
-  weather: { icon: Sun, color: 'text-sky-500', bg: 'bg-sky-50 dark:bg-sky-950/30' },
-}
+export function GardenLog({ householdId }: GardenLogProps) {
+  const [observations, setObservations] = useState<Observation[]>([])
+  const [loading, setLoading] = useState(true)
+  const [newNote, setNewNote] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const supabase = createClient()
 
-const defaultEntries: LogEntry[] = [
-  {
-    id: '1',
-    date: new Date(Date.now() - 86400000).toISOString(),
-    note: 'Banana peppers are looking great! Almost ready to harvest. The plants are really thriving in the full sun spot by the house.',
-    photos: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20230706_185416-Iafs9Siq1WdrKnmdJhVyIscMoe5hhW.jpg'],
-    type: 'harvest',
-    pestAlert: false
-  },
-  {
-    id: '2',
-    date: new Date(Date.now() - 172800000).toISOString(),
-    note: 'The squash is taking over the trellis! Had to train some vines to grow upward. Beautiful yellow flowers appearing.',
-    photos: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20220618_180911-PBDTHZW4x1HiwJrf0Vqz8sEWuvlZ2P.jpg'],
-    type: 'general'
-  },
-  {
-    id: '3',
-    date: new Date(Date.now() - 259200000).toISOString(),
-    note: 'Spring planting is done! Tomatoes, peppers, and herbs all set up with their cages. Chives looking beautiful.',
-    photos: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20230516_180831-vbTH4ec67CfLJIdGv2YjtQMBEQ5Qea.jpg'],
-    type: 'planting'
-  },
-  {
-    id: '4',
-    date: new Date(Date.now() - 604800000).toISOString(),
-    note: 'What a gorgeous sunrise this morning! The backyard garden is peaceful at this hour. Perfect time for watering.',
-    photos: ['https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20240716_062946-AC71Knsy1Bx0AOanquS95W8IzISrOf.jpg'],
-    type: 'weather'
+  useEffect(() => {
+    fetchObservations()
+  }, [householdId])
+
+  const fetchObservations = async () => {
+    setLoading(true)
+    const { data, error } = await supabase
+      .from('observations')
+      .select('*')
+      .eq('household_id', householdId)
+      .order('observed_at', { ascending: false })
+      .limit(10)
+
+    if (error) {
+      console.error('Error fetching observations:', error)
+      setObservations([])
+    } else {
+      setObservations((data || []) as Observation[])
+    }
+    setLoading(false)
   }
-]
+
+  const handleAddNote = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newNote.trim()) return
+
+    setSubmitting(true)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      toast.error('Not authenticated')
+      setSubmitting(false)
+      return
+    }
+
+    const { error } = await supabase
+      .from('observations')
+      .insert({
+        household_id: householdId,
+        created_by_user_id: user.id,
+        note: newNote.trim(),
+        observed_at: new Date().toISOString().split('T')[0],
+      })
+
+    if (error) {
+      toast.error('Failed to save note')
+    } else {
+      toast.success('Note saved!')
+      setNewNote('')
+      await fetchObservations()
+    }
+    setSubmitting(false)
+  }
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Garden Notes</CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <form onSubmit={handleAddNote} className="space-y-2">
+          <Textarea
+            placeholder="What did you notice in the garden today?"
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)}
+            rows={2}
+          />
+          <Button type="submit" disabled={submitting || !newNote.trim()}>
+            <Plus className="h-4 w-4 mr-2" />
+            Add Note
+          </Button>
+        </form>
+
+        <div className="space-y-3 max-h-96 overflow-y-auto">
+          {loading ? (
+            <p className="text-sm text-muted-foreground">Loading notes...</p>
+          ) : observations.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No garden notes yet.</p>
+          ) : (
+            observations.map((obs) => (
+              <div
+                key={obs.id}
+                className="p-3 bg-muted rounded-lg border border-border hover:bg-muted/80 transition-colors"
+              >
+                <div className="flex items-start gap-2">
+                  <Leaf className="h-4 w-4 text-green-600 mt-1 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm">{obs.note}</p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      {new Date(obs.observed_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
 
 export function GardenLog() {
   const [entries, setEntries] = useState<LogEntry[]>(defaultEntries)

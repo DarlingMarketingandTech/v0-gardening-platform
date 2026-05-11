@@ -6,13 +6,16 @@ import { createClient } from "@/lib/supabase/client"
 import { DashboardClient } from "@/components/dashboard/dashboard-client"
 import { getUserHousehold } from "@/lib/actions/household"
 import { Loader2, Flower2 } from "lucide-react"
-import type { Plant } from "@/lib/types"
+import type { Plant, Planting } from "@/lib/types"
 
 export default function MyGardenPage() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(true)
   const [plants, setPlants] = useState<Plant[]>([])
   const [householdId, setHouseholdId] = useState<string | null>(null)
+  const [growingCount, setGrowingCount] = useState(0)
+  const [needSunCount, setNeedSunCount] = useState(0)
+  const [needWaterCount, setNeedWaterCount] = useState(0)
 
   useEffect(() => {
     async function loadGarden() {
@@ -25,15 +28,40 @@ export default function MyGardenPage() {
         }
         setHouseholdId(household_id)
 
-        // Fetch plants for this household
         const supabase = createClient()
-        const { data } = await supabase
-          .from('plants')
+        
+        // Fetch plantings to get stats
+        const { data: plantings } = await supabase
+          .from('plantings')
           .select('*')
           .eq('household_id', household_id)
-          .order('name')
         
-        setPlants((data || []) as Plant[])
+        const typedPlantings = (plantings || []) as Planting[]
+        setGrowingCount(typedPlantings.filter(p => ['planted', 'growing'].includes(p.status)).length)
+        // These would require additional plant_library fields, so for now setting to 0
+        setNeedSunCount(0)
+        setNeedWaterCount(0)
+        
+        // Fetch plant library for plants array
+        const { data: plantLibrary } = await supabase
+          .from('plant_library')
+          .select('*')
+          .order('common_name')
+        
+        const converted: Plant[] = (plantLibrary || []).map((item: any) => ({
+          id: item.id,
+          name: item.common_name,
+          scientific_name: item.scientific_name,
+          category: item.category,
+          difficulty: 'intermediate',
+          sunlight_needs: 'partial_sun',
+          water_needs: 'moderate',
+          days_to_maturity: item.days_to_maturity,
+          description: item.description,
+          care_tips: item.care_notes,
+        }))
+        
+        setPlants(converted)
       } catch (error) {
         console.error('Failed to load garden:', error)
       } finally {
@@ -58,5 +86,13 @@ export default function MyGardenPage() {
     )
   }
 
-  return <DashboardClient plants={plants} householdId={householdId} />
+  return (
+    <DashboardClient 
+      plants={plants} 
+      householdId={householdId || ''} 
+      growingCount={growingCount}
+      needSunCount={needSunCount}
+      needWaterCount={needWaterCount}
+    />
+  )
 }

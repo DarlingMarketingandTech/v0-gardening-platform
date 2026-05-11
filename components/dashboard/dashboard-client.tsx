@@ -35,18 +35,14 @@ import type { Plant } from '@/lib/types'
 
 interface DashboardClientProps {
   plants: Plant[]
-  householdId?: string | null
+  householdId: string
+  growingCount: number
+  needSunCount: number
+  needWaterCount: number
 }
 
-export function DashboardClient({ plants, householdId }: DashboardClientProps) {
+export function DashboardClient({ plants, householdId, growingCount, needSunCount, needWaterCount }: DashboardClientProps) {
   const [activeTab, setActiveTab] = useState('home')
-  const [isRainy, setIsRainy] = useState(false)
-
-  // Check weather for rainy conditions if we have location data
-  useEffect(() => {
-    // Weather checking would go here if we had location data
-    setIsRainy(false)
-  }, [])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-accent/5">
@@ -168,7 +164,7 @@ export function DashboardClient({ plants, householdId }: DashboardClientProps) {
               <Card className="bg-green-50 dark:bg-green-950/30 border-green-200/50">
                 <CardContent className="pt-4 pb-4 text-center">
                   <Sprout className="h-6 w-6 text-green-600 dark:text-green-400 mx-auto mb-1" />
-                  <div className="text-2xl font-bold text-green-700 dark:text-green-300">12</div>
+                  <div className="text-2xl font-bold text-green-700 dark:text-green-300">{growingCount}</div>
                   <div className="text-xs text-green-600/80 dark:text-green-400/80">Growing</div>
                 </CardContent>
               </Card>
@@ -176,7 +172,7 @@ export function DashboardClient({ plants, householdId }: DashboardClientProps) {
               <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200/50">
                 <CardContent className="pt-4 pb-4 text-center">
                   <Sun className="h-6 w-6 text-amber-600 dark:text-amber-400 mx-auto mb-1" />
-                  <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">3</div>
+                  <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">{needSunCount}</div>
                   <div className="text-xs text-amber-600/80 dark:text-amber-400/80">Need Sun</div>
                 </CardContent>
               </Card>
@@ -184,7 +180,7 @@ export function DashboardClient({ plants, householdId }: DashboardClientProps) {
               <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200/50">
                 <CardContent className="pt-4 pb-4 text-center">
                   <Droplets className="h-6 w-6 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
-                  <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">5</div>
+                  <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">{needWaterCount}</div>
                   <div className="text-xs text-blue-600/80 dark:text-blue-400/80">Need Water</div>
                 </CardContent>
               </Card>
@@ -257,7 +253,7 @@ export function DashboardClient({ plants, householdId }: DashboardClientProps) {
           {/* LOG TAB */}
           <TabsContent value="log" className="mt-6 space-y-6">
             <PestLookup />
-            <GardenLog />
+            <GardenLog householdId={householdId} />
           </TabsContent>
 
           {/* ALERTS TAB */}

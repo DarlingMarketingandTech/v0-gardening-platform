@@ -10,6 +10,90 @@ export interface Profile {
   updated_at: string
 }
 
+// New Supabase Models - Primary Source of Truth
+export interface Household {
+  id: string
+  name: string
+  created_at: string
+  updated_at: string
+  default_areas_created?: boolean
+}
+
+export interface HouseholdMember {
+  id: string
+  household_id: string
+  user_id: string
+  role: 'admin' | 'editor' | 'viewer'
+  display_name: string
+  created_at: string
+}
+
+export interface GardenArea {
+  id: string
+  household_id: string
+  name: string
+  description?: string | null
+  sort_order: number
+  created_at: string
+  updated_at: string
+}
+
+export interface PlantLibraryItem {
+  id: string
+  common_name: string
+  scientific_name?: string | null
+  category: 'vegetable' | 'fruit' | 'herb' | 'flower' | 'shrub' | 'tree' | 'succulent' | 'indoor'
+  sunlight_needs?: string | null
+  water_needs?: string | null
+  days_to_maturity?: number | null
+  care_notes?: string | null
+  description?: string | null
+  created_at: string
+}
+
+export interface Planting {
+  id: string
+  household_id: string
+  garden_area_id: string
+  plant_library_id?: string | null
+  custom_name: string
+  quantity: number
+  planted_date: string
+  status: 'planted' | 'growing' | 'ready' | 'harvested' | 'completed'
+  notes?: string | null
+  planted_by_user_id?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface CareTask {
+  id: string
+  household_id: string
+  planting_id?: string | null
+  garden_area_id?: string | null
+  task_type: 'watering' | 'feeding' | 'pruning' | 'weeding' | 'harvesting' | 'other'
+  title: string
+  description?: string | null
+  due_date: string
+  completed_at?: string | null
+  completed_by_user_id?: string | null
+  created_at: string
+  updated_at: string
+}
+
+export interface Observation {
+  id: string
+  household_id: string
+  garden_area_id?: string | null
+  planting_id?: string | null
+  created_by_user_id: string
+  note: string
+  photo_url?: string | null
+  observed_at: string
+  created_at: string
+}
+
+// Legacy Models - Deprecated, use new models above
 export interface Plant {
   id: string
   name: string

@@ -1,55 +1,55 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { createClient } from '@/lib/supabase/client'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { PlantCard } from '@/components/plant-card'
 import { PlantsFilters } from '@/components/plants-filters'
-import type { Plant } from '@/lib/types'
-
-// Sample plant data
-const SAMPLE_PLANTS: Plant[] = [
-  {
-    id: '1',
-    name: 'Tomato',
-    scientific_name: 'Solanum lycopersicum',
-    category: 'vegetable',
-    difficulty: 'beginner',
-    sunlight_needs: 'full_sun',
-    water_needs: 'moderate',
-    days_to_maturity: 70,
-    description: 'Popular garden vegetable, rich in vitamins and great for fresh eating or cooking.',
-    care_tips: 'Provide sturdy support, consistent watering, and full sunlight.',
-  },
-  {
-    id: '2',
-    name: 'Basil',
-    scientific_name: 'Ocimum basilicum',
-    category: 'herb',
-    difficulty: 'beginner',
-    sunlight_needs: 'full_sun',
-    water_needs: 'moderate',
-    days_to_maturity: 21,
-    description: 'Aromatic herb perfect for cooking and companion planting.',
-    care_tips: 'Pinch off flowers to encourage leaf growth. Keep soil moist but not waterlogged.',
-  },
-  {
-    id: '3',
-    name: 'Pepper',
-    scientific_name: 'Capsicum annuum',
-    category: 'vegetable',
-    difficulty: 'intermediate',
-    sunlight_needs: 'full_sun',
-    water_needs: 'moderate',
-    days_to_maturity: 60,
-    description: 'Colorful and nutritious, peppers add beauty and flavor to gardens and kitchens.',
-    care_tips: 'Provide consistent warmth and moisture. Support heavy fruit with stakes.',
-  },
-]
+import { Card, CardContent } from '@/components/ui/card'
+import { Sprout } from 'lucide-react'
+import type { Plant, PlantLibraryItem } from '@/lib/types'
 
 export default function PlantsPage() {
-  const [plants, setPlants] = useState<Plant[]>(SAMPLE_PLANTS)
-  const [filteredPlants, setFilteredPlants] = useState<Plant[]>(SAMPLE_PLANTS)
+  const [plants, setPlants] = useState<Plant[]>([])
+  const [filteredPlants, setFilteredPlants] = useState<Plant[]>([])
+  const [loading, setLoading] = useState(true)
+  const supabase = createClient()
+
+  useEffect(() => {
+    const fetchPlants = async () => {
+      setLoading(true)
+      const { data, error } = await supabase
+        .from('plant_library')
+        .select('*')
+        .order('common_name')
+
+      if (error) {
+        console.error('Error fetching plants:', error)
+        setPlants([])
+        setFilteredPlants([])
+      } else {
+        // Convert PlantLibraryItem to Plant for compatibility
+        const converted: Plant[] = (data || []).map((item: any) => ({
+          id: item.id,
+          name: item.common_name,
+          scientific_name: item.scientific_name,
+          category: item.category,
+          difficulty: 'intermediate',
+          sunlight_needs: (item.sunlight_needs as any) || 'partial_sun',
+          water_needs: (item.water_needs as any) || 'moderate',
+          days_to_maturity: item.days_to_maturity,
+          description: item.description,
+          care_tips: item.care_notes,
+        }))
+        setPlants(converted)
+        setFilteredPlants(converted)
+      }
+      setLoading(false)
+    }
+
+    fetchPlants()
+  }, [])
 
   const handleFilterChange = (filters: {
     category?: string
@@ -96,18 +96,33 @@ export default function PlantsPage() {
           </p>
         </div>
 
-        <PlantsFilters onFilterChange={handleFilterChange} />
-
-        {filteredPlants && filteredPlants.length > 0 ? (
-          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
-            {filteredPlants.map((plant: Plant) => (
-              <PlantCard key={plant.id} plant={plant} />
-            ))}
-          </div>
-        ) : (
+        {loading ? (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No plants found matching your criteria.</p>
+            <p className="text-muted-foreground">Loading plants...</p>
           </div>
+        ) : plants.length === 0 ? (
+          <Card className="border-dashed">
+            <CardContent className="pt-12 pb-12 text-center">
+              <Sprout className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+              <p className="text-muted-foreground">No plants in the library yet.</p>
+            </CardContent>
+          </Card>
+        ) : (
+          <>
+            <PlantsFilters onFilterChange={handleFilterChange} />
+
+            {filteredPlants && filteredPlants.length > 0 ? (
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mt-6">
+                {filteredPlants.map((plant: Plant) => (
+                  <PlantCard key={plant.id} plant={plant} />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <p className="text-muted-foreground">No plants found matching your criteria.</p>
+              </div>
+            )}
+          </>
         )}
       </main>
       
