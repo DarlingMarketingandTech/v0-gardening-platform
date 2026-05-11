@@ -1,6 +1,42 @@
-import type { Plant } from '@/lib/types'
+import type { GardenInsight, GardenPlanting, GardenTask, GardenZone, Plant } from '@/lib/types'
 
 export const DEMO_HOUSEHOLD_ID = 'demo-momma-ds-garden'
+
+export const demoGardenZones: GardenZone[] = [
+  {
+    id: 'patio-pots',
+    name: 'Patio Pots',
+    type: 'container',
+    description: 'Moveable containers for herbs, compact vegetables, flowers, and experiments that need close watching.',
+    sunlight: 'morning_sun',
+    soilProfile: 'Fast-draining potting mix with compost blended in; nutrients leach faster than in-ground soil.',
+    waterProfile: 'Dries fastest. Check moisture with a finger test during hot spells and water deeply until runoff.',
+    bestFor: ['Basil', 'Parsley', 'Peppers', 'Compact tomatoes', 'Nasturtiums'],
+    caution: 'Containers heat up quickly, so roots can swing from thirsty to stressed in one afternoon.',
+  },
+  {
+    id: 'main-ground-bed',
+    name: 'Main In-Ground Bed',
+    type: 'in_ground',
+    description: 'The traditional garden area for deeper roots, sprawling crops, and plants that benefit from stable soil temperatures.',
+    sunlight: 'full_sun',
+    soilProfile: 'Native soil improved with compost; best for crops that want deeper root exploration.',
+    waterProfile: 'More forgiving than pots. Water deeply and less often to train roots downward.',
+    bestFor: ['Tomatoes', 'Zinnias', 'Squash', 'Beans', 'Peppers'],
+    caution: 'Watch for soil compaction and weed pressure after heavy rain.',
+  },
+  {
+    id: 'raised-bed-trellis',
+    name: 'Raised Bed with Trellis',
+    type: 'raised_bed_trellis',
+    description: 'Above-ground framed bed with a built-in lattice/trellis for vertical crops and better airflow.',
+    sunlight: 'full_sun',
+    soilProfile: 'Loose raised-bed mix warms earlier and drains well, great for roots that hate soggy feet.',
+    waterProfile: 'Needs consistent moisture because raised beds drain faster than ground beds.',
+    bestFor: ['Cucumbers', 'Pole beans', 'Peas', 'Cherry tomatoes', 'Climbing flowers'],
+    caution: 'Vertical crops need training early; waiting too long turns vines into a green knot factory.',
+  },
+]
 
 export const demoPlants: Plant[] = [
   {
@@ -70,5 +106,103 @@ export const demoPlants: Plant[] = [
     min_temp_f: 60,
     max_temp_f: 90,
     care_tips: 'Trellis to save space and pick often before fruits get oversized.',
+  },
+]
+
+export const demoPlantings: GardenPlanting[] = [
+  {
+    id: 'planting-tomato-ground',
+    plantId: 'demo-tomato',
+    zoneId: 'main-ground-bed',
+    plantName: 'Cherokee Purple Tomato',
+    scientificName: 'Solanum lycopersicum',
+    status: 'growing',
+    plantedDate: '2026-05-10',
+    expectedHarvestWindow: 'Late July through September',
+    purpose: 'Flavor-first slicer tomatoes for peak summer meals.',
+    successStrategy: 'Keep moisture even, prune lower leaves, mulch, and support before fruit gets heavy.',
+  },
+  {
+    id: 'planting-basil-pot',
+    plantId: 'demo-basil',
+    zoneId: 'patio-pots',
+    plantName: 'Genovese Basil',
+    scientificName: 'Ocimum basilicum',
+    status: 'growing',
+    plantedDate: '2026-05-18',
+    expectedHarvestWindow: 'June through first frost',
+    purpose: 'Kitchen herb and companion aroma near tomatoes.',
+    successStrategy: 'Harvest tips weekly, never let it flower for long, and keep soil evenly moist.',
+  },
+  {
+    id: 'planting-cucumber-trellis',
+    plantId: 'demo-cucumber',
+    zoneId: 'raised-bed-trellis',
+    plantName: 'Marketmore Cucumber',
+    scientificName: 'Cucumis sativus',
+    status: 'planned',
+    plantedDate: '2026-05-25',
+    expectedHarvestWindow: 'Mid July through August',
+    purpose: 'Crisp slicing cucumbers grown vertically to save space.',
+    successStrategy: 'Train vines while young, water consistently, and pick cucumbers before seeds harden.',
+  },
+]
+
+export const demoTasks: GardenTask[] = [
+  {
+    id: 'task-check-pot-moisture',
+    title: 'Check patio pot moisture before afternoon heat',
+    dueTiming: 'today',
+    zoneId: 'patio-pots',
+    reason: 'Containers dry faster than ground beds because roots have limited soil volume.',
+    botanistNote: 'A finger test beats a calendar. Water when the top inch is dry, then soak until runoff.',
+  },
+  {
+    id: 'task-train-cucumber',
+    title: 'Train cucumber vines onto the trellis early',
+    dueTiming: 'this_week',
+    zoneId: 'raised-bed-trellis',
+    plantingId: 'planting-cucumber-trellis',
+    reason: 'Young vines are flexible and easier to guide before tendrils anchor in the wrong direction.',
+    botanistNote: 'Vertical growth increases airflow, improves fruit visibility, and can reduce fungal pressure.',
+  },
+  {
+    id: 'task-mulch-tomato',
+    title: 'Mulch around tomato stems after soil warms',
+    dueTiming: 'soon',
+    zoneId: 'main-ground-bed',
+    plantingId: 'planting-tomato-ground',
+    reason: 'Mulch buffers soil moisture swings that cause tomato stress and blossom-end issues.',
+    botanistNote: 'Keep mulch a few inches away from the stem to avoid trapping moisture against tissue.',
+  },
+]
+
+export const demoInsights: GardenInsight[] = [
+  {
+    id: 'insight-place-cukes-trellis',
+    title: 'Best place: cucumbers belong on the raised bed trellis',
+    priority: 'high',
+    topic: 'placement',
+    summary: 'Cucumbers gain the most from vertical support, airflow, and easy harvest access.',
+    science: 'Cucumber vines use tendrils to climb. Trellising reduces leaf crowding, keeps fruit straighter, and improves air movement around foliage.',
+    action: 'Plant cucumbers at the base of the trellis, guide vines every few days, and water deeply at soil level.',
+  },
+  {
+    id: 'insight-tomato-water',
+    title: 'Tomatoes care about consistency more than pampering',
+    priority: 'high',
+    topic: 'watering',
+    summary: 'Even watering is one of the strongest levers for better tomato quality.',
+    science: 'Rapid wet-dry swings interfere with calcium movement and can contribute to blossom-end rot, cracking, and stress responses.',
+    action: 'Mulch, water deeply, and avoid shallow daily sprinkles unless extreme heat demands it.',
+  },
+  {
+    id: 'insight-basil-prune',
+    title: 'Basil gets better when harvested boldly',
+    priority: 'medium',
+    topic: 'pruning',
+    summary: 'Regular pinching keeps basil leafy, compact, and flavorful.',
+    science: 'Removing the growing tip encourages lateral branching and delays flowering, which helps preserve tender leaf production.',
+    action: 'Pinch above a pair of leaves weekly once the plant has several leaf sets.',
   },
 ]
