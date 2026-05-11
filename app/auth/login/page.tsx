@@ -4,6 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { ensureHouseholdMembership } from '@/lib/actions/household'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -35,7 +36,17 @@ export default function LoginPage() {
       return
     }
 
-    router.push('/dashboard')
+    // Get the user to ensure household membership
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (user) {
+      // Ensure user is linked to their household
+      await ensureHouseholdMembership(email, user.id)
+    }
+
+    router.push('/my-garden')
     router.refresh()
   }
 

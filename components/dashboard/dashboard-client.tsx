@@ -15,7 +15,6 @@ import { NotificationSettings } from './notification-settings'
 import { MoonPhaseWidget } from './moon-phase-widget'
 import { SeedInventory } from './seed-inventory'
 import { PestLookup } from './pest-lookup'
-import { getProfile, type MomProfile } from '@/lib/profile-store'
 import { 
   Sprout, 
   Leaf, 
@@ -36,38 +35,18 @@ import type { Plant } from '@/lib/types'
 
 interface DashboardClientProps {
   plants: Plant[]
+  householdId?: string | null
 }
 
-export function DashboardClient({ plants }: DashboardClientProps) {
+export function DashboardClient({ plants, householdId }: DashboardClientProps) {
   const [activeTab, setActiveTab] = useState('home')
   const [isRainy, setIsRainy] = useState(false)
-  const [profile, setProfile] = useState<MomProfile | null>(null)
 
+  // Check weather for rainy conditions if we have location data
   useEffect(() => {
-    setProfile(getProfile())
+    // Weather checking would go here if we had location data
+    setIsRainy(false)
   }, [])
-
-  // Check weather for rainy conditions using profile location
-  useEffect(() => {
-    if (!profile?.latitude || !profile?.longitude) return
-
-    const checkWeather = async () => {
-      try {
-        const res = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${profile.latitude}&longitude=${profile.longitude}&current=weather_code,precipitation`
-        )
-        const data = await res.json()
-        if (data.current) {
-          const weatherCode = data.current.weather_code
-          const precipitation = data.current.precipitation
-          setIsRainy(precipitation > 0 || (weatherCode >= 51 && weatherCode <= 82))
-        }
-      } catch {
-        setIsRainy(false)
-      }
-    }
-    checkWeather()
-  }, [profile?.latitude, profile?.longitude])
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-accent/5">
@@ -80,11 +59,8 @@ export function DashboardClient({ plants }: DashboardClientProps) {
             </div>
             <div>
               <h1 className="font-semibold text-lg leading-tight">
-                {profile?.gardenName || "Mom's Garden"}
+                Momma D&apos;s Garden
               </h1>
-              <p className="text-sm text-muted-foreground">
-                {profile?.city}, {profile?.state}
-              </p>
             </div>
           </div>
           <Button variant="ghost" size="icon" asChild>
@@ -99,7 +75,7 @@ export function DashboardClient({ plants }: DashboardClientProps) {
         {/* Greeting */}
         <div className="mb-6">
           <h2 className="text-2xl md:text-3xl font-bold mb-1">
-            Hello, {profile?.name || 'Gardener'}!
+            Welcome to your garden!
           </h2>
           <p className="text-muted-foreground">
             {getGreeting()}
@@ -170,21 +146,20 @@ export function DashboardClient({ plants }: DashboardClientProps) {
                 className="w-full h-full object-cover"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4">
-                <p className="text-white/80 text-sm">Your Garden</p>
-                <h3 className="text-white text-xl font-semibold">{profile?.gardenName || "Mom's Garden"}</h3>
-              </div>
+            <div className="absolute bottom-4 left-4 right-4">
+              <p className="text-white/80 text-sm">Your Garden</p>
+              <h3 className="text-white text-xl font-semibold">Momma D&apos;s Garden</h3>
+            </div>
             </div>
 
             {/* Weather & Moon Phase Row */}
             <div className="grid lg:grid-cols-3 gap-4">
-              <div className="lg:col-span-2">
-                <WeatherWidget 
-                  latitude={profile?.latitude || null} 
-                  longitude={profile?.longitude || null}
-                  locationName={profile?.city ? `${profile.city}, ${profile.state}` : undefined}
-                />
-              </div>
+            <div className="lg:col-span-2">
+              <WeatherWidget 
+                latitude={null} 
+                longitude={null}
+              />
+            </div>
               <MoonPhaseWidget />
             </div>
 
@@ -293,8 +268,8 @@ export function DashboardClient({ plants }: DashboardClientProps) {
           {/* LOCAL PROS TAB */}
           <TabsContent value="local" className="mt-6">
             <ServiceProviders 
-              latitude={profile?.latitude || null}
-              longitude={profile?.longitude || null}
+              latitude={null}
+              longitude={null}
             />
           </TabsContent>
         </Tabs>
