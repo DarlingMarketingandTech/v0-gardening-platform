@@ -7,8 +7,8 @@ import { PlantCard } from '@/components/plant-card'
 import { PlantsFilters } from '@/components/plants-filters'
 import type { Plant } from '@/lib/types'
 
-// Sample plant data
-const SAMPLE_PLANTS: Plant[] = [
+// Demo stand-in for future plant_library rows.
+const SAMPLE_PLANT_LIBRARY: Plant[] = [
   {
     id: '1',
     name: 'Tomato',
@@ -48,8 +48,8 @@ const SAMPLE_PLANTS: Plant[] = [
 ]
 
 export default function PlantsPage() {
-  const [plants, setPlants] = useState<Plant[]>(SAMPLE_PLANTS)
-  const [filteredPlants, setFilteredPlants] = useState<Plant[]>(SAMPLE_PLANTS)
+  const [plants, setPlants] = useState<Plant[]>(SAMPLE_PLANT_LIBRARY)
+  const [filteredPlants, setFilteredPlants] = useState<Plant[]>(SAMPLE_PLANT_LIBRARY)
 
   const handleFilterChange = (filters: {
     category?: string
@@ -90,9 +90,9 @@ export default function PlantsPage() {
       
       <main className="flex-1 container px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2">Plant Database</h1>
+          <h1 className="text-3xl font-bold mb-2">Plant Library</h1>
           <p className="text-muted-foreground">
-            Explore our collection of plants and find the perfect ones for your garden.
+            Explore the demo plant reference collection and find good fits for your garden spaces.
           </p>
         </div>
 

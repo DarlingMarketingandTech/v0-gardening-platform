@@ -19,7 +19,7 @@ export function Footer() {
           <div>
             <h4 className="font-semibold mb-4">Features</h4>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><Link href="/plants" className="hover:text-primary transition-colors">Plant Database</Link></li>
+              <li><Link href="/plants" className="hover:text-primary transition-colors">Plant Library</Link></li>
               <li><Link href="/gardens" className="hover:text-primary transition-colors">Garden Planner</Link></li>
               <li><Link href="/planner" className="hover:text-primary transition-colors">Season Planner</Link></li>
             </ul>

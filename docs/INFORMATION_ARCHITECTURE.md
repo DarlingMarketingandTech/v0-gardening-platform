@@ -45,12 +45,18 @@ Purpose: answer “What is growing where?”
 
 Content:
 
-- Garden zones
-- Plantings by zone
+- Garden spaces
+- Plantings by space
 - Best-placement guidance
 - Simple map/list hybrid
 
-Recommended zones:
+Product language:
+
+- Use `spaces` in the UI.
+- Outdoor zones and indoor rooms should share one product pattern.
+- The database can keep using `garden_areas` while the product says `spaces`.
+
+Recommended starter spaces:
 
 - Patio Pots
 - Raised Bed + Trellis
@@ -149,11 +155,11 @@ It should show:
 5. Quick log button
 6. Link to Garden zones
 
-## Garden zone detail template
+## Garden space detail template
 
-Each zone page/card should answer:
+Each space page/card should answer:
 
-- What is this zone?
+- What is this space?
 - What grows best here?
 - What should Mom watch out for?
 - What is currently planted here?

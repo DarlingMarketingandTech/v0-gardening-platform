@@ -70,18 +70,20 @@ Success:
 - Each recommendation has one clear action.
 - Science is available, but not forced.
 
-## Phase 4: Garden zones
+## Phase 4: Garden spaces
 
 Goal: make the app match Momma D's real backyard.
 
-Start with zone cards, not a complex map:
+Start with space cards, not a complex map:
 
 - Patio Pots
 - Raised Bed + Trellis
 - In-Ground Bed
 - Pollinator Border
 
-Each zone should show:
+Use `spaces` as the product term while keeping `garden_areas` as the schema term for now.
+
+Each space should show:
 
 - What grows best here.
 - What to watch for.
@@ -151,7 +153,7 @@ Goal: save the garden after the product shape is stable.
 Work:
 
 - Convert prototype garden data into Supabase schema.
-- Add garden_zones, plantings, tasks, observations.
+- Add households, household_members, garden_areas, plant_library, plantings, care_tasks, and observations.
 - Read real data into the same UI shapes.
 - Restore private household access before exposing real family data.
 - Add minimal create/update actions.
