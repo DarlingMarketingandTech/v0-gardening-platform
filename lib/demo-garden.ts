@@ -2,6 +2,118 @@ import type { Plant } from '@/lib/types'
 
 export const DEMO_HOUSEHOLD_ID = 'demo-momma-ds-garden'
 
+export type DemoBackyardZoneId = 'patio-pots' | 'in-ground-bed' | 'raised-bed-trellis' | 'pollinator-border'
+
+export interface DemoZonePlanting {
+  id: string
+  name: string
+  variety?: string
+  status: 'getting-started' | 'growing' | 'ready-soon' | 'blooming'
+  careNote: string
+}
+
+export interface DemoBackyardZone {
+  id: DemoBackyardZoneId
+  title: string
+  description: string
+  bestFor: string
+  watchFor: string
+  weeklyAction: string
+  plantings: DemoZonePlanting[]
+}
+
+export const demoBackyardZones: DemoBackyardZone[] = [
+  {
+    id: 'patio-pots',
+    title: 'Patio Pots',
+    description: 'Sunny concrete near the kitchen, easy to check when Momma D walks in and out.',
+    bestFor: 'Herbs and compact warm-season crops that like quick access and steady watering.',
+    watchFor: 'Containers drying out faster than beds after hot, windy afternoons.',
+    weeklyAction: 'Lift the lightest pot. If it feels hollow, soak it until water runs through.',
+    plantings: [
+      {
+        id: 'patio-basil',
+        name: 'Genovese Basil',
+        status: 'growing',
+        careNote: 'Pinch the tips before flowers form so the plant stays leafy.',
+      },
+      {
+        id: 'patio-pepper',
+        name: 'Patio Pepper',
+        variety: 'Sweet Banana',
+        status: 'ready-soon',
+        careNote: 'Keep moisture even while the peppers size up.',
+      },
+    ],
+  },
+  {
+    id: 'in-ground-bed',
+    title: 'In-Ground Bed',
+    description: 'Native soil with room for deeper roots and bigger summer vegetables.',
+    bestFor: 'Tomatoes, squash, beans, and greens that want more root space.',
+    watchFor: 'Weeds along the edges and soil compaction after heavy rain.',
+    weeklyAction: 'Walk the bed edge once and pull obvious weeds before they seed.',
+    plantings: [
+      {
+        id: 'ground-tomato',
+        name: 'Cherokee Purple Tomato',
+        status: 'growing',
+        careNote: 'Check lower leaves and keep mulch pulled back from the stem.',
+      },
+      {
+        id: 'ground-squash',
+        name: 'Summer Squash',
+        status: 'getting-started',
+        careNote: 'Give leaves airflow and water at the base when mornings are dry.',
+      },
+    ],
+  },
+  {
+    id: 'raised-bed-trellis',
+    title: 'Raised Bed + Trellis',
+    description: 'Warm, well-drained soil with vertical space for climbers.',
+    bestFor: 'Cucumbers, pole beans, small melons, and vining flowers.',
+    watchFor: 'Fast vine growth that needs gentle tying before wind bends stems.',
+    weeklyAction: 'Tuck one stray vine onto the trellis while the stems are still flexible.',
+    plantings: [
+      {
+        id: 'trellis-cucumber',
+        name: 'Marketmore Cucumber',
+        status: 'growing',
+        careNote: 'Train new vines upward and pick fruit before it gets oversized.',
+      },
+      {
+        id: 'trellis-beans',
+        name: 'Pole Beans',
+        status: 'getting-started',
+        careNote: 'Guide young runners toward the trellis strings.',
+      },
+    ],
+  },
+  {
+    id: 'pollinator-border',
+    title: 'Pollinator Border',
+    description: 'A soft blooming edge that brings bees, butterflies, and color near the food garden.',
+    bestFor: 'Zinnias, cosmos, native perennials, and flowering herbs.',
+    watchFor: 'Aggressive spreaders crowding slower blooms during the heat of summer.',
+    weeklyAction: 'Deadhead a short stretch of spent blooms so fresh buds keep coming.',
+    plantings: [
+      {
+        id: 'border-zinnia',
+        name: 'Cut-and-Come-Again Zinnia',
+        status: 'blooming',
+        careNote: 'Cut flowers often to encourage more blooms.',
+      },
+      {
+        id: 'border-cosmos',
+        name: 'Cosmos',
+        status: 'growing',
+        careNote: 'Let a few flowers mature for reseeding and pollinator visits.',
+      },
+    ],
+  },
+]
+
 export const demoPlants: Plant[] = [
   {
     id: 'demo-tomato',

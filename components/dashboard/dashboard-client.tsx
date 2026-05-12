@@ -10,7 +10,7 @@ import { PlantLibrary } from './plant-library'
 import { TaskList } from './task-list'
 import { GardenLog } from './garden-log'
 import { ServiceProviders } from './service-providers'
-import { ActiveCrops } from './active-crops'
+import { GardenBackyardZones } from './garden-backyard-zones'
 import { NotificationSettings } from './notification-settings'
 import { MoonPhaseWidget } from './moon-phase-widget'
 import { SeedInventory } from './seed-inventory'
@@ -235,27 +235,7 @@ export function DashboardClient({ plants, householdId }: DashboardClientProps) {
 
           {/* GARDEN */}
           <TabsContent value="garden" className="mt-6 space-y-6">
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Garden Areas</CardTitle>
-                <p className="text-sm text-muted-foreground">
-                  We&apos;ll match your real backyard: pots, in-ground, and a raised bed with trellis.
-                </p>
-              </CardHeader>
-              <CardContent className="grid gap-3">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                  <AreaCard title="Patio Pots" subtitle="Best for herbs + peppers" />
-                  <AreaCard title="In-Ground" subtitle="Best for bigger root space" />
-                  <AreaCard title="Raised Bed + Trellis" subtitle="Best for cucumbers + climbers" />
-                </div>
-
-                <div className="rounded-lg border bg-muted/10 p-3 text-sm text-muted-foreground">
-                  Demo household: <span className="font-mono">{householdId ?? 'demo-momma-ds-garden'}</span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <ActiveCrops />
+            <GardenBackyardZones />
           </TabsContent>
 
           {/* LOG */}
@@ -333,20 +313,6 @@ export function DashboardClient({ plants, householdId }: DashboardClientProps) {
 
       {/* Bottom padding for mobile */}
       <div className="h-6" />
-    </div>
-  )
-}
-
-function AreaCard({ title, subtitle }: { title: string; subtitle: string }) {
-  return (
-    <div className="rounded-xl border bg-muted/10 p-4">
-      <div className="font-semibold">{title}</div>
-      <div className="text-sm text-muted-foreground">{subtitle}</div>
-      <div className="mt-3">
-        <Button variant="outline" size="sm" disabled>
-          Coming next
-        </Button>
-      </div>
     </div>
   )
 }
