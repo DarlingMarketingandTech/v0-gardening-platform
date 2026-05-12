@@ -217,15 +217,16 @@ export function DashboardClient({ plants, householdId }: DashboardClientProps) {
                 <CardTitle className="text-lg">Today&apos;s Tasks</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <TaskList isRainy={isRainy} compact />
+                <TaskList isRainy={isRainy} compact={!showFullTaskList} />
 
-                <details className="rounded-lg border bg-muted/10 p-3">
+                <details
+                  className="rounded-lg border bg-muted/10 p-3"
+                  open={showFullTaskList}
+                  onToggle={(event) => setShowFullTaskList(event.currentTarget.open)}
+                >
                   <summary className="cursor-pointer text-sm font-medium">
-                    See the full checklist
+                    {showFullTaskList ? 'Show fewer tasks' : 'See the full checklist'}
                   </summary>
-                  <div className="mt-3">
-                    <TaskList isRainy={isRainy} />
-                  </div>
                 </details>
               </CardContent>
             </Card>
