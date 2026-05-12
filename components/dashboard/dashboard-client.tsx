@@ -43,6 +43,7 @@ type MainTab = 'today' | 'garden' | 'log' | 'guide'
 export function DashboardClient({ plants, householdId }: DashboardClientProps) {
   const [activeTab, setActiveTab] = useState<MainTab>('today')
   const [isRainy, setIsRainy] = useState(false)
+  const [showFullTaskList, setShowFullTaskList] = useState(false)
 
   // Check weather for rainy conditions if we have location data
   useEffect(() => {
