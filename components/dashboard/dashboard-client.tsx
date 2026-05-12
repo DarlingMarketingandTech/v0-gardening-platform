@@ -350,7 +350,11 @@ function AreaCard({ title, subtitle }: { title: string; subtitle: string }) {
 }
 
 function MoonPhaseWidgetIcon() {
-  return <span className="inline-flex h-4 w-4 items-center justify-center">🌙</span>
+  return (
+    <span aria-hidden="true" className="inline-flex h-4 w-4 items-center justify-center">
+      🌙
+    </span>
+  )
 }
 
 function getGreeting(): string {
