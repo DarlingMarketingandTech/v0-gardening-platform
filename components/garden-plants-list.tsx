@@ -39,6 +39,8 @@ export function GardenPlantsList({ gardenPlants, gardenId }: GardenPlantsListPro
 
   const handleStatusChange = async (plantId: string, newStatus: string) => {
     startTransition(async () => {
+      // Legacy write path: status updates still target old `garden_plants`.
+      // Future care state should live on `plantings` and/or related `care_tasks`.
       const { error } = await supabase
         .from('garden_plants')
         .update({ status: newStatus, updated_at: new Date().toISOString() })
@@ -60,6 +62,8 @@ export function GardenPlantsList({ gardenPlants, gardenId }: GardenPlantsListPro
     }
 
     startTransition(async () => {
+      // Legacy delete path: removing a plant still deletes old `garden_plants`.
+      // Future behavior should retire or archive household-scoped `plantings`.
       const { error } = await supabase
         .from('garden_plants')
         .delete()

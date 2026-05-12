@@ -61,6 +61,8 @@ export function AddPlantDialog({ gardenId, plants }: AddPlantDialogProps) {
         expectedHarvestDate = planted.toISOString().split('T')[0]
       }
 
+      // Legacy write path: old `garden_plants` inserts should eventually move
+      // to household-scoped `plantings` linked to `plant_library`.
       const { error } = await supabase
         .from('garden_plants')
         .insert({
