@@ -88,7 +88,7 @@ export function GardenLog() {
   const [hasPestAlert, setHasPestAlert] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Load from localStorage
+  // Prototype log storage for now; future real entries should map to observations.
   useEffect(() => {
     const saved = localStorage.getItem('gardenLog')
     if (saved) {
@@ -100,7 +100,7 @@ export function GardenLog() {
     }
   }, [])
 
-  // Save to localStorage
+  // Keep current demo behavior unchanged during the audit.
   useEffect(() => {
     localStorage.setItem('gardenLog', JSON.stringify(entries))
   }, [entries])

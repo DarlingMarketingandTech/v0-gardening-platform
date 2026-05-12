@@ -98,7 +98,7 @@ export function SeedInventory() {
     weeksBeforeFrost: 6
   })
 
-  // Load from localStorage and calculate frost date
+  // Seed box stays browser-local for the prototype until the product chooses a real inventory model.
   useEffect(() => {
     const saved = localStorage.getItem('seedInventory')
     if (saved) {

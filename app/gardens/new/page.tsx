@@ -32,7 +32,7 @@ export default function NewGardenPage() {
     setLoading(true)
 
     try {
-      // Load existing gardens from localStorage
+      // Demo-first placeholder until garden spaces move to household-backed persistence.
       const savedGardens = localStorage.getItem('mommaGardens')
       const gardens = savedGardens ? JSON.parse(savedGardens) : []
 

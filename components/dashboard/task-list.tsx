@@ -55,7 +55,7 @@ export function TaskList({ isRainy = false, compact = false }: TaskListProps) {
   const [tasks, setTasks] = useState<Task[]>(defaultTasks)
   const [newTask, setNewTask] = useState('')
 
-  // Load tasks from localStorage on mount
+  // Prototype task storage for now; future real tasks should map to care_tasks.
   useEffect(() => {
     const saved = localStorage.getItem('gardenTasks')
     if (saved) {
@@ -67,7 +67,7 @@ export function TaskList({ isRainy = false, compact = false }: TaskListProps) {
     }
   }, [])
 
-  // Save tasks to localStorage
+  // Keep current demo behavior unchanged during the audit.
   useEffect(() => {
     localStorage.setItem('gardenTasks', JSON.stringify(tasks))
   }, [tasks])
