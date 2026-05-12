@@ -33,6 +33,8 @@ export default async function GardenDetailPage({ params }: GardenDetailPageProps
     redirect('/auth/login')
   }
 
+  // Legacy persistence path: this route still reads old `gardens` rows.
+  // Future household-backed spaces should read from `garden_areas`.
   const { data: garden, error } = await supabase
     .from('gardens')
     .select('*')
@@ -43,7 +45,8 @@ export default async function GardenDetailPage({ params }: GardenDetailPageProps
     notFound()
   }
 
-  // Fetch garden plants with plant details
+  // Legacy persistence path: `garden_plants` plus joined `plants` should
+  // eventually become `plantings` joined to `plant_library`.
   const { data: gardenPlants } = await supabase
     .from('garden_plants')
     .select(`
@@ -53,7 +56,8 @@ export default async function GardenDetailPage({ params }: GardenDetailPageProps
     .eq('garden_id', id)
     .order('created_at', { ascending: false })
 
-  // Fetch all available plants for the add dialog
+  // Legacy plant reference path: old generic `plants` data should migrate
+  // toward `plant_library` when persistence work is scheduled.
   const { data: allPlants } = await supabase
     .from('plants')
     .select('*')

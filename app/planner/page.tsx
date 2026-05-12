@@ -49,6 +49,8 @@ export default async function PlannerPage() {
     .eq('id', user.id)
     .single()
 
+  // Legacy plant reference path: old generic `plants` data should migrate
+  // toward `plant_library` before this becomes a persisted planning surface.
   const { data: plants } = await supabase
     .from('plants')
     .select('*')
@@ -56,7 +58,8 @@ export default async function PlannerPage() {
 
   const recommendedPlants = getPlantingRecommendations(plants || [])
 
-  // Get user's garden plants that are active
+  // Legacy persistence path: `garden_plants` joined to `plants` and `gardens`
+  // should eventually become `plantings` joined to `plant_library` and `garden_areas`.
   const { data: gardenPlants } = await supabase
     .from('garden_plants')
     .select(`
