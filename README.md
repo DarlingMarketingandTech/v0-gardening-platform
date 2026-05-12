@@ -10,19 +10,18 @@ This repository is linked to a [v0](https://v0.app) project. You can continue de
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies, then run the development server on **port 3005** (documented convention for this repo):
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
+npm install
+npm run dev:3005
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+You can also use `npm run dev -- --port 3005`, `yarn dev --port 3005`, or `pnpm dev -- --port 3005` if needed.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open [http://localhost:3005](http://localhost:3005) in your browser. The marketing home is `/`; the main in-app experience is **`/my-garden`** (Today, Garden, Log, Guide).
+
+For product scope and agent guardrails, see **`AGENTS.md`** and **`docs/PRODUCT_GUARDRAILS.md`**.
 
 ## Learn More
 
@@ -32,4 +31,4 @@ To learn more, take a look at the following resources:
 - [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 - [v0 Documentation](https://v0.app/docs) - learn about v0 and how to use it.
 
-<a href="https://v0.app/chat/api/kiro/clone/DarlingMarketingandTech/v0-gardening-platform" alt="Open in Kiro"><img src="https://pdgvvgmkdvyeydso.public.blob.vercel-storage.com/open%20in%20kiro.svg?sanitize=true" /></a>
+[![Open in Kiro](https://pdgvvgmkdvyeydso.public.blob.vercel-storage.com/open%20in%20kiro.svg?sanitize=true)](https://v0.app/chat/api/kiro/clone/DarlingMarketingandTech/v0-gardening-platform)

@@ -1,0 +1,30 @@
+---
+description: Product and scope guardrails for Momma D's Garden (mobile-first, demo-first).
+alwaysApply: true
+---
+
+# Momma D's Garden — Cursor guardrails
+
+## Product
+
+- **Mobile-first** gardening companion for **Momma D** (family garden notebook, not generic SaaS).
+- **Demo-first for now**: prioritize calm UX and harmless prototype data; do not assume production auth or full Supabase wiring for every change.
+
+## Primary user flow
+
+In-app navigation centers on **Today → Garden → Log → Guide** (see `/my-garden` dashboard). Prefer changes that reinforce this loop.
+
+## Do
+
+- Match existing layout and design language unless asked to redesign.
+- Keep edits **scoped** to the task; preserve reachable paths for depth (e.g. Guide) when simplifying surfaces.
+
+## Do not (without explicit product ask)
+
+- **Auth rabbit holes**: do not expand login, RLS, or invite flows unless the task explicitly requires it.
+- **Feature sprawl**: avoid new tabs, heavy dashboards, or unrelated refactors bundled with small fixes.
+- **Conflicting data models**: be careful mixing demo/localStorage paths with documented future Supabase shapes; when unsure, read `docs/INFORMATION_ARCHITECTURE.md` and `docs/PRODUCT_GUARDRAILS.md`.
+
+## Docs hint
+
+Canonical product direction: `docs/PRODUCT_GUARDRAILS.md`, `docs/INFORMATION_ARCHITECTURE.md`, `docs/ROADMAP.md`. Older handoff or IA docs may lag the demo-first app—verify against code when in doubt.
