@@ -2,6 +2,17 @@
 
 Last updated: 2026-05-11
 
+Deprecated as current product direction: this handoff captured a persistence/auth-heavy stabilization pass and is no longer authoritative for the active demo-first app. Use `AGENTS.md`, `docs/PRODUCT_GUARDRAILS.md`, `docs/INFORMATION_ARCHITECTURE.md`, and `docs/ROADMAP.md` for current direction.
+
+Current direction:
+
+- Demo-first for now with harmless prototype data.
+- Mobile-first for Momma D.
+- Primary `/my-garden` flow: **Today / Garden / Log / Guide**.
+- Local development convention: `http://localhost:3005` via `npm run dev:3005`.
+
+The notes below are historical and should be treated as future persistence/auth context, not an instruction to rebuild auth or Supabase wiring during prototype UX work.
+
 ## Purpose
 
 This is a private family gardening app for a small group of relatives. It should not be treated like a public SaaS app. The goal is a simple, low-click garden notebook for tracking one shared family garden.
@@ -18,9 +29,9 @@ Default garden areas:
 
 ## Core direction
 
-Supabase must be the single source of truth for all real family garden data.
+Future persisted family garden data should use Supabase as the source of truth.
 
-Do not use localStorage for real app data such as gardens, garden areas, plants, plantings, garden log entries, observations, care tasks, reminders, or profile data.
+Do not use localStorage for real private app data such as gardens, garden areas, plants, plantings, garden log entries, observations, care tasks, reminders, or profile data.
 
 localStorage is acceptable only for harmless UI preferences such as dismissed onboarding messages, theme, or last selected tab.
 
@@ -45,7 +56,9 @@ A user should only read or write data for a household if they are a member of th
 
 ## Auth and access model
 
-The app should be invite-only.
+Historical/future target: auth should not block the current demo-first product shaping loop. Revisit this section before exposing real private family garden data.
+
+The persisted family app should be invite-only.
 
 Use roles such as:
 
@@ -55,7 +68,7 @@ Use roles such as:
 
 Non-invited users should not be allowed to create accounts or access garden data.
 
-All app-data routes should require authentication, including:
+When real private data is exposed, app-data routes should require authentication, including:
 
 - /my-garden
 - /dashboard
@@ -147,7 +160,7 @@ git clone https://github.com/DarlingMarketingandTech/v0-gardening-platform.git
 cd v0-gardening-platform
 npm install
 npm run build
-npm run dev
+npm run dev:3005
 ```
 
 Then use Codex or local edits instead of relying on v0 for broad refactors.
@@ -165,6 +178,8 @@ grep -R "export function GardenLog" -n components/dashboard/garden-log.tsx
 ```
 
 ## Next high-value tasks
+
+Historical list: verify against `docs/ROADMAP.md` before using this as an implementation plan.
 
 ### Task 1: Build fix pass
 
@@ -186,16 +201,16 @@ Make sure migrations exist for household tables, invite-only signup, garden area
 
 ### Task 4: UX simplification
 
-Primary navigation should become:
+Deprecated target. Current primary navigation is:
 
 - Today
-- My Garden
-- Add Plant
+- Garden
+- Log
+- Guide
 
 Secondary or later:
 
 - Plant Library
-- Notes
 - Settings
 
 Hide Seeds, Alerts, Local Pros, and advanced features until the app foundation is stable.

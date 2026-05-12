@@ -1,24 +1,27 @@
 # Momma D's Garden
 
-A mobile first garden companion for Mom that feels calm, helpful, and confidence building.
+A demo-first, mobile-first garden companion for Momma D that feels calm, helpful, and confidence building.
 
 ## Product promise
+
 Give Mom the guidance of a world class botanist without the overwhelm.
 
 ## Design principles
+
 - **One next step**: the home screen should always suggest the single best action today.
 - **Gentle depth**: simple first, expandable science when she wants it.
 - **Real world shapes**: pots, in ground beds, and raised beds are first class.
 - **Trustworthy**: every recommendation should explain *why* (light, temperature, growth stage).
 
 ## Primary user flows
-1. **See today**: weather, top tasks, and quick notes.
-2. **Add an area**: "Pot", "In Ground", "Raised Bed" plus location notes.
-3. **Add a plant to an area**: pick from library, set planted date, set stage.
-4. **Get reminders**: watering, feeding, pruning, pest checks.
-5. **Track outcomes**: harvest logs and observations.
+
+1. **Today**: see the best next garden action, weather context, and urgent tasks.
+2. **Garden**: understand what is growing in each backyard zone.
+3. **Log**: capture quick notes, photos, harvests, and observations.
+4. **Guide**: learn the why behind recommendations without cluttering daily use.
 
 ## Non goals (for now)
+
 - Social/community features
 - Complex garden CAD layouts
-- Multi user permissions beyond household basics
+- Production auth, invites, or multi-user permissions while the app is still demo-first
