@@ -1,12 +1,17 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+/**
+ * Demo-first guardrails
+ *
+ * The app is currently being shaped with harmless demo data.
+ * Mom should be able to open /my-garden and browse /plants without signing in.
+ *
+ * Keep truly account-specific areas protected until auth/persistence is reintroduced.
+ */
 const protectedRoutes = [
-  '/my-garden',
-  '/dashboard',
   '/gardens',
   '/garden-areas',
-  '/plants',
   '/settings',
 ]
 
@@ -63,24 +68,12 @@ export async function updateSession(request: NextRequest) {
   }
 
   // Redirect /dashboard to /my-garden for backwards compatibility
-  if (request.nextUrl.pathname === '/dashboard' && user) {
+  // In demo mode, /my-garden is public so this is safe.
+  if (request.nextUrl.pathname === '/dashboard') {
     const url = request.nextUrl.clone()
     url.pathname = '/my-garden'
     return NextResponse.redirect(url)
   }
-
-  // IMPORTANT: You *must* return the supabaseResponse object as it is.
-  // If you're creating a new response object with NextResponse.next() make sure to:
-  // 1. Pass the request in it, like so:
-  //    const myNewResponse = NextResponse.next({ request })
-  // 2. Copy over the cookies, like so:
-  //    myNewResponse.cookies.setAll(supabaseResponse.cookies.getAll())
-  // 3. Change the myNewResponse object to fit your needs, but avoid changing
-  //    the cookies!
-  // 4. Finally:
-  //    return myNewResponse
-  // If this is not done, you may be causing the browser and server to go out
-  // of sync and terminate the user's session prematurely!
 
   return supabaseResponse
 }
