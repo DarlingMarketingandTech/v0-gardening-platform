@@ -2,29 +2,43 @@ import type { Plant } from '@/lib/types'
 
 export const DEMO_HOUSEHOLD_ID = 'demo-momma-ds-garden'
 
-export type DemoBackyardZoneId = 'patio-pots' | 'in-ground-bed' | 'raised-bed-trellis' | 'pollinator-border'
+export type DemoGardenSpaceId =
+  | 'patio-pots'
+  | 'in-ground-bed'
+  | 'raised-bed-trellis'
+  | 'pollinator-border'
+  | 'kitchen-window'
+  | 'living-room-plant-shelf'
+  | 'bathroom-fern-corner'
+  | 'bedroom-windowsill'
 
-export interface DemoZonePlanting {
+export type DemoGardenSpaceGroup = 'outdoor' | 'indoor'
+
+export type DemoGardenPlantingStatus = 'getting-started' | 'growing' | 'ready-soon' | 'blooming'
+
+export interface DemoGardenPlanting {
   id: string
   name: string
   variety?: string
-  status: 'getting-started' | 'growing' | 'ready-soon' | 'blooming'
+  status: DemoGardenPlantingStatus
   careNote: string
 }
 
-export interface DemoBackyardZone {
-  id: DemoBackyardZoneId
+export interface DemoGardenSpace {
+  id: DemoGardenSpaceId
+  group: DemoGardenSpaceGroup
   title: string
   description: string
   bestFor: string
   watchFor: string
   weeklyAction: string
-  plantings: DemoZonePlanting[]
+  plantings: DemoGardenPlanting[]
 }
 
-export const demoBackyardZones: DemoBackyardZone[] = [
+export const demoGardenSpaces: DemoGardenSpace[] = [
   {
     id: 'patio-pots',
+    group: 'outdoor',
     title: 'Patio Pots',
     description: 'Sunny concrete near the kitchen, easy to check when Momma D walks in and out.',
     bestFor: 'Herbs and compact warm-season crops that like quick access and steady watering.',
@@ -48,6 +62,7 @@ export const demoBackyardZones: DemoBackyardZone[] = [
   },
   {
     id: 'in-ground-bed',
+    group: 'outdoor',
     title: 'In-Ground Bed',
     description: 'Native soil with room for deeper roots and bigger summer vegetables.',
     bestFor: 'Tomatoes, squash, beans, and greens that want more root space.',
@@ -70,6 +85,7 @@ export const demoBackyardZones: DemoBackyardZone[] = [
   },
   {
     id: 'raised-bed-trellis',
+    group: 'outdoor',
     title: 'Raised Bed + Trellis',
     description: 'Warm, well-drained soil with vertical space for climbers.',
     bestFor: 'Cucumbers, pole beans, small melons, and vining flowers.',
@@ -92,6 +108,7 @@ export const demoBackyardZones: DemoBackyardZone[] = [
   },
   {
     id: 'pollinator-border',
+    group: 'outdoor',
     title: 'Pollinator Border',
     description: 'A soft blooming edge that brings bees, butterflies, and color near the food garden.',
     bestFor: 'Zinnias, cosmos, native perennials, and flowering herbs.',
@@ -109,6 +126,74 @@ export const demoBackyardZones: DemoBackyardZone[] = [
         name: 'Cosmos',
         status: 'growing',
         careNote: 'Let a few flowers mature for reseeding and pollinator visits.',
+      },
+    ],
+  },
+  {
+    id: 'kitchen-window',
+    group: 'indoor',
+    title: 'Kitchen Window',
+    description: 'Bright morning light near the sink, perfect for quick checks between meals.',
+    bestFor: 'Handy herbs, small starts, and cheerful plants that like close daily attention.',
+    watchFor: 'Dry soil from warm glass and leaves leaning hard toward the light.',
+    weeklyAction: 'Turn each pot a quarter turn and trim anything getting leggy.',
+    plantings: [
+      {
+        id: 'kitchen-basil',
+        name: 'Sweet Basil',
+        status: 'growing',
+        careNote: 'Harvest from the tips so the plant stays full instead of stretching thin.',
+      },
+    ],
+  },
+  {
+    id: 'living-room-plant-shelf',
+    group: 'indoor',
+    title: 'Living Room Plant Shelf',
+    description: 'Steady filtered light with room for a small cluster of easy houseplants.',
+    bestFor: 'Trailing plants, foliage favorites, and other plants that prefer bright indirect light.',
+    watchFor: 'Dusty leaves and crowded pots blocking airflow around the shelf.',
+    weeklyAction: 'Wipe one or two leaves clean and check that saucers stay dry underneath.',
+    plantings: [
+      {
+        id: 'shelf-pothos',
+        name: 'Golden Pothos',
+        status: 'growing',
+        careNote: 'Let the top inch of soil dry before watering again.',
+      },
+    ],
+  },
+  {
+    id: 'bathroom-fern-corner',
+    group: 'indoor',
+    title: 'Bathroom Fern Corner',
+    description: 'A humid little pocket that stays gentler on moisture-loving foliage.',
+    bestFor: 'Ferns and other plants that enjoy soft light and a little extra humidity.',
+    watchFor: 'Brown tips if the pot dries fully or sits in stale water too long.',
+    weeklyAction: 'Check moisture with a fingertip and pour off any water still resting in the saucer.',
+    plantings: [
+      {
+        id: 'bathroom-fern',
+        name: 'Boston Fern',
+        status: 'growing',
+        careNote: 'Keep the soil lightly damp and snip tired fronds at the base.',
+      },
+    ],
+  },
+  {
+    id: 'bedroom-windowsill',
+    group: 'indoor',
+    title: 'Bedroom Windowsill',
+    description: 'Gentle window light for a small plant that feels calm and low-fuss.',
+    bestFor: 'Compact, patient plants that like a bright perch without constant watering.',
+    watchFor: 'Cool drafts at night and leaves pressing right against the glass.',
+    weeklyAction: 'Slide pots an inch back from the pane and check for dry soil before watering.',
+    plantings: [
+      {
+        id: 'bedroom-sansevieria',
+        name: 'Snake Plant',
+        status: 'getting-started',
+        careNote: 'Wait until the soil is mostly dry before giving it another drink.',
       },
     ],
   },

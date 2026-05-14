@@ -10,7 +10,7 @@ import { PlantLibrary } from './plant-library'
 import { TaskList } from './task-list'
 import { GardenLog } from './garden-log'
 import { ServiceProviders } from './service-providers'
-import { GardenBackyardZones } from './garden-backyard-zones'
+import { GardenSpaces } from './garden-spaces'
 import { NotificationSettings } from './notification-settings'
 import { MoonPhaseWidget } from './moon-phase-widget'
 import { SeedInventory } from './seed-inventory'
@@ -235,7 +235,7 @@ export function DashboardClient({ plants, householdId }: DashboardClientProps) {
 
           {/* GARDEN */}
           <TabsContent value="garden" className="mt-6 space-y-6">
-            <GardenBackyardZones />
+            <GardenSpaces />
           </TabsContent>
 
           {/* LOG */}
