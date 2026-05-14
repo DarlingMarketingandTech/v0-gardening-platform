@@ -52,7 +52,7 @@ export function DashboardClient({ plants, householdId }: DashboardClientProps) {
   }, [])
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-primary/5 via-background to-accent/5">
+    <div className="min-h-screen bg-linear-to-b from-primary/5 via-background to-accent/5">
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-primary/10">
         <div className="container px-4 py-4 flex items-center justify-between">
@@ -130,7 +130,7 @@ export function DashboardClient({ plants, householdId }: DashboardClientProps) {
                 alt="Garden with squash growing on trellis"
                 className="w-full h-full object-cover"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
               <div className="absolute bottom-4 left-4 right-4">
                 <p className="text-white/80 text-sm">Your Garden</p>
                 <h3 className="text-white text-xl font-semibold">Momma D&apos;s Garden</h3>
