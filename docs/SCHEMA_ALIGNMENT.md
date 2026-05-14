@@ -6,7 +6,7 @@ This document maps current product language to the intended Supabase schema dire
 
 - Product term `Space` maps to the `garden_areas` table.
 - Outdoor zones and indoor rooms should share one UI and data pattern under `garden_areas`.
-- Product term `Plant in the garden` maps to the `plantings` table.
+- Product term `Plant in a space` maps to the `plantings` table.
 - Generic plant reference data maps to the `plant_library` table.
 - Notes, photos, and timeline entries map to the `observations` table.
 - Care work, reminders, and recurring maintenance map to the `care_tasks` table.
