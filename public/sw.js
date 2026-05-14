@@ -1,20 +1,17 @@
 // Service Worker for Momma D's Garden PWA
+// Bump CACHE_NAME when precache URLs or offline behavior changes (cache bust).
 
-const CACHE_NAME = 'momma-d-garden-v1';
-const urlsToCache = [
-  '/',
-  '/dashboard',
-  '/manifest.json'
-];
+const CACHE_VERSION = 'v2';
+const CACHE_NAME = `momma-d-garden-${CACHE_VERSION}`;
+const urlsToCache = ['/', '/my-garden', '/manifest.json'];
 
 // Install event - cache resources
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => {
-        console.log('[SW] Cache opened');
-        return cache.addAll(urlsToCache);
-      })
+    caches.open(CACHE_NAME).then((cache) => {
+      console.log('[SW] Cache opened', CACHE_NAME);
+      return cache.addAll(urlsToCache);
+    }),
   );
   self.skipWaiting();
 });
@@ -29,9 +26,9 @@ self.addEventListener('activate', (event) => {
             console.log('[SW] Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
-        })
+        }),
       );
-    })
+    }),
   );
   self.clients.claim();
 });
@@ -41,7 +38,6 @@ self.addEventListener('fetch', (event) => {
   event.respondWith(
     fetch(event.request)
       .then((response) => {
-        // Clone and cache successful responses
         if (response && response.status === 200) {
           const responseClone = response.clone();
           caches.open(CACHE_NAME).then((cache) => {
@@ -52,7 +48,7 @@ self.addEventListener('fetch', (event) => {
       })
       .catch(() => {
         return caches.match(event.request);
-      })
+      }),
   );
 });
 
@@ -65,17 +61,15 @@ self.addEventListener('push', (event) => {
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
-      primaryKey: 1
+      primaryKey: 1,
     },
     actions: [
       { action: 'view', title: 'View Garden' },
-      { action: 'dismiss', title: 'Dismiss' }
-    ]
+      { action: 'dismiss', title: 'Dismiss' },
+    ],
   };
 
-  event.waitUntil(
-    self.registration.showNotification("Momma D's Garden", options)
-  );
+  event.waitUntil(self.registration.showNotification("Momma D's Garden", options));
 });
 
 // Notification click event
@@ -83,8 +77,6 @@ self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
   if (event.action === 'view' || !event.action) {
-    event.waitUntil(
-      clients.openWindow('/dashboard')
-    );
+    event.waitUntil(clients.openWindow('/my-garden'));
   }
 });
