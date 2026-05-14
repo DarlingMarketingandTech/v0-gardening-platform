@@ -152,7 +152,7 @@ export function NotificationSettings() {
     
     window.addEventListener('beforeinstallprompt', handleBeforeInstall)
     
-    // Load saved settings
+    // Browser-local preference state is acceptable here because this is not garden record data.
     const saved = localStorage.getItem('garden_notification_settings')
     if (saved) {
       setSettings(JSON.parse(saved))
