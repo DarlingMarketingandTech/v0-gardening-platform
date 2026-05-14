@@ -93,15 +93,15 @@ export function DashboardClient({ plants }: DashboardClientProps) {
         </div>
       </header>
 
-      <main className="container px-4 py-6">
-        {/* Greeting */}
-        <div className="mb-6">
-          <h2 className="text-2xl md:text-3xl font-bold mb-1">Welcome to your garden!</h2>
-          <p className="text-muted-foreground">{getGreeting()}</p>
+      <main className="container px-4 py-4 md:py-6">
+        {/* Greeting — keep compact so Today stays above the fold on small screens */}
+        <div className="mb-3">
+          <h2 className="text-xl md:text-2xl font-bold leading-tight">My Garden</h2>
+          <p className="text-sm text-muted-foreground">{getGreeting()}</p>
         </div>
 
         {/* Calm Navigation */}
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as MainTab)} className="space-y-6">
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as MainTab)} className="space-y-4 md:space-y-6">
           <TabsList className="w-full grid grid-cols-4 h-auto bg-muted/50 p-1 rounded-xl">
             <TabsTrigger
               value="today"
@@ -137,87 +137,87 @@ export function DashboardClient({ plants }: DashboardClientProps) {
           </TabsList>
 
           {/* TODAY */}
-          <TabsContent value="today" className="space-y-5 mt-6">
-            {/* Featured Garden Photo */}
-            <div className="relative h-40 md:h-52 rounded-2xl overflow-hidden shadow-lg">
-              <img
-                src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20220618_180911-PBDTHZW4x1HiwJrf0Vqz8sEWuvlZ2P.jpg"
-                alt="Garden with squash growing on trellis"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
-              <div className="absolute bottom-4 left-4 right-4">
-                <p className="text-white/80 text-sm">Your Garden</p>
-                <h3 className="text-white text-xl font-semibold">Momma D&apos;s Garden</h3>
-              </div>
-            </div>
-
+          <TabsContent value="today" className="mt-3 space-y-4 md:mt-4">
             <Card className="overflow-hidden rounded-2xl border-primary/15 shadow-sm">
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-2 pt-4">
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <CardTitle className="text-lg">Today&apos;s Garden Brief</CardTitle>
-                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
-                      {todayBrief.contextLabel}
-                    </p>
+                    <CardTitle className="text-base md:text-lg">Today</CardTitle>
+                    <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">{todayBrief.contextLabel}</p>
                   </div>
-                  <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
-                    Today
+                  <span className="shrink-0 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
+                    Now
                   </span>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-4 pb-4">
                 <BriefActionCard item={todayBrief.bestAction} />
 
-                <div className="rounded-xl border border-primary/10 bg-muted/25 px-3 py-2.5">
-                  <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                    Why this matters
-                  </p>
-                  <p className="text-sm leading-relaxed text-foreground/90">{todayBrief.whyThisMatters}</p>
-                </div>
-
-                {todayBrief.secondaryTasks.length > 0 ? (
-                  <div className="space-y-2">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
-                      Small follow-ups
-                    </p>
-                    <div className="space-y-2">
-                      {todayBrief.secondaryTasks.map((task) => (
-                        <BriefSmallTask key={task.id} item={task} />
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-
-                <div className="grid gap-3 md:grid-cols-2">
-                  <BriefSignal
-                    label="Watch out"
-                    item={todayBrief.watchOut}
-                    icon={AlertTriangle}
-                    className="border-amber-200/70 bg-amber-50/70 dark:border-amber-900/50 dark:bg-amber-950/20"
-                  />
-                  <BriefSignal
-                    label="Progress"
-                    item={todayBrief.milestone}
-                    icon={Sparkles}
-                    className="border-emerald-200/70 bg-emerald-50/70 dark:border-emerald-900/50 dark:bg-emerald-950/20"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 pt-1">
-                  <Button variant="outline" className="h-auto py-3" onClick={() => setActiveTab('log')}>
+                <div className="flex flex-wrap gap-2">
+                  <Button className="h-10 shrink-0" onClick={() => setActiveTab('log')}>
                     <BookHeart className="mr-2 h-4 w-4" />
                     Log a note
                   </Button>
-                  <Button variant="outline" className="h-auto py-3" onClick={() => setActiveTab('garden')}>
+                  <Button variant="outline" className="h-10 shrink-0" onClick={() => setActiveTab('garden')}>
                     <Sprout className="mr-2 h-4 w-4" />
                     View spaces
                   </Button>
                 </div>
+
+                <details className="rounded-xl border border-border/80 bg-muted/10">
+                  <summary className="cursor-pointer px-3 py-2.5 text-sm font-medium text-foreground select-none [&::-webkit-details-marker]:hidden">
+                    More for today
+                  </summary>
+                  <div className="space-y-3 border-t border-border/60 px-3 py-3">
+                    <div className="rounded-xl border border-primary/10 bg-muted/25 px-3 py-2.5">
+                      <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                        Why this matters
+                      </p>
+                      <p className="text-sm leading-relaxed text-foreground/90">{todayBrief.whyThisMatters}</p>
+                    </div>
+
+                    {todayBrief.secondaryTasks.length > 0 ? (
+                      <div className="space-y-2">
+                        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                          Small follow-ups
+                        </p>
+                        <div className="space-y-2">
+                          {todayBrief.secondaryTasks.map((task) => (
+                            <BriefSmallTask key={task.id} item={task} />
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+
+                    <div className="grid gap-3 md:grid-cols-2">
+                      <BriefSignal
+                        label="Watch out"
+                        item={todayBrief.watchOut}
+                        icon={AlertTriangle}
+                        className="border-amber-200/70 bg-amber-50/70 dark:border-amber-900/50 dark:bg-amber-950/20"
+                      />
+                      <BriefSignal
+                        label="Progress"
+                        item={todayBrief.milestone}
+                        icon={Sparkles}
+                        className="border-emerald-200/70 bg-emerald-50/70 dark:border-emerald-900/50 dark:bg-emerald-950/20"
+                      />
+                    </div>
+                  </div>
+                </details>
+
+                <details className="rounded-xl border border-border/80 bg-muted/10">
+                  <summary className="cursor-pointer px-3 py-2.5 text-sm font-medium text-foreground select-none [&::-webkit-details-marker]:hidden">
+                    Weather
+                  </summary>
+                  <div className="border-t border-border/60 px-3 py-3">
+                    <WeatherWidgetContent weatherState={weatherState} />
+                  </div>
+                </details>
+
+                <NeedHelpStrip onOpenGuide={() => setActiveTab('guide')} />
               </CardContent>
             </Card>
-
-            <WeatherWidgetContent weatherState={weatherState} />
           </TabsContent>
 
           {/* GARDEN */}
@@ -245,6 +245,9 @@ export function DashboardClient({ plants }: DashboardClientProps) {
               <summary className="cursor-pointer font-semibold flex items-center gap-2">
                 <BookOpen className="h-4 w-4" /> Plant Library
               </summary>
+              <p className="mt-2 text-xs text-muted-foreground">
+                A calm place to browse plants and ideas. Use it when you want to identify something or compare options.
+              </p>
               <div className="mt-4">
                 <PlantLibrary plants={plants} />
               </div>
@@ -300,6 +303,35 @@ export function DashboardClient({ plants }: DashboardClientProps) {
 
       {/* Bottom padding for mobile */}
       <div className="h-6" />
+    </div>
+  )
+}
+
+function NeedHelpStrip({ onOpenGuide }: { onOpenGuide: () => void }) {
+  return (
+    <div className="rounded-xl border border-dashed border-primary/25 bg-muted/20 px-3 py-3">
+      <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">Need help?</p>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={onOpenGuide}>
+          <Leaf className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+          Identify plant
+        </Button>
+        <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={onOpenGuide}>
+          <Bug className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+          What&apos;s wrong?
+        </Button>
+        <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={onOpenGuide}>
+          <CloudSun className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+          Seasonal advice
+        </Button>
+        <Button type="button" variant="secondary" size="sm" className="shrink-0" onClick={onOpenGuide}>
+          <BookOpen className="mr-1.5 h-3.5 w-3.5" aria-hidden />
+          Learn
+        </Button>
+      </div>
+      <p className="mt-2 text-xs leading-snug text-muted-foreground">
+        These open the Guide so advanced tools stay optional, not noisy.
+      </p>
     </div>
   )
 }
