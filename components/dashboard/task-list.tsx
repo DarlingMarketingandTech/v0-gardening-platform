@@ -55,7 +55,7 @@ export function TaskList({ isRainy = false, compact = false }: TaskListProps) {
   const [tasks, setTasks] = useState<Task[]>(defaultTasks)
   const [newTask, setNewTask] = useState('')
 
-  // Prototype task storage for now; future real tasks should map to care_tasks.
+  // Stored in localStorage for the demo, but this represents real task data that should map to care_tasks.
   useEffect(() => {
     const saved = localStorage.getItem('gardenTasks')
     if (saved) {

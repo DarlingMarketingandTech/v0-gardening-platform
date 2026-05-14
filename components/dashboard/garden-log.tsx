@@ -88,7 +88,7 @@ export function GardenLog() {
   const [hasPestAlert, setHasPestAlert] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Prototype log storage for now; future real entries should map to observations.
+  // Stored in localStorage for the demo, but this represents real log data that should map to observations.
   useEffect(() => {
     const saved = localStorage.getItem('gardenLog')
     if (saved) {
