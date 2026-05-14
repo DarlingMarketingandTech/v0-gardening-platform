@@ -1,47 +1,33 @@
 'use client'
 
-import { useEffect, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
-import { 
-  Sun, 
-  Cloud, 
-  CloudRain, 
-  CloudSnow, 
-  Wind, 
+import {
+  Sun,
+  Cloud,
+  CloudRain,
+  CloudSnow,
+  Wind,
   Droplets,
   Thermometer,
   Sunrise,
   Sunset,
   AlertTriangle,
   Umbrella,
-  ShieldAlert
+  ShieldAlert,
 } from 'lucide-react'
+import {
+  useGardenWeather,
+  getGardenWeatherTipMessage,
+  isActionableGardenWeather,
+  type GardenWeatherData,
+  type GardenWeatherLocation,
+  type GardenWeatherState,
+  type GardenWeatherTipKind,
+} from '@/components/dashboard/use-garden-weather'
 
-interface WeatherData {
-  temperature: number
-  weatherCode: number
-  humidity: number
-  windSpeed: number
-  uvIndex: number
-  precipitation: number
-  daily: {
-    date: string
-    tempMax: number
-    tempMin: number
-    precipitationSum: number
-    weatherCode: number
-  }[]
-}
-
-interface SunData {
-  sunrise: string
-  sunset: string
-  dayLength: string
-}
-
-function getWeatherIcon(code: number, className = "h-8 w-8") {
+function getWeatherIcon(code: number, className = 'h-8 w-8') {
   if (code === 0) return <Sun className={`${className} text-amber-500`} />
   if (code >= 1 && code <= 3) return <Cloud className={`${className} text-slate-400`} />
   if (code >= 51 && code <= 67) return <CloudRain className={`${className} text-blue-500`} />
@@ -66,41 +52,26 @@ function getWeatherDescription(code: number): string {
   return 'Unknown'
 }
 
-function getMomTip(weather: WeatherData, sunData: SunData | null): { tip: string; icon: React.ReactNode } {
-  if (weather.precipitation > 5 || (weather.weatherCode >= 61 && weather.weatherCode <= 82)) {
-    return {
-      tip: "It's raining today - no need to water the garden! Perfect day for indoor seed starting.",
-      icon: <Umbrella className="h-5 w-5 text-blue-500" />
-    }
+function tipIconForKind(kind: GardenWeatherTipKind, className = 'h-5 w-5 shrink-0') {
+  switch (kind) {
+    case 'rain':
+      return <Umbrella className={`${className} text-blue-500`} />
+    case 'uv':
+      return <ShieldAlert className={`${className} text-orange-500`} />
+    case 'heat':
+      return <Thermometer className={`${className} text-red-500`} />
+    case 'cold':
+      return <AlertTriangle className={`${className} text-blue-400`} />
+    case 'wind':
+      return <Wind className={`${className} text-slate-500`} />
+    default:
+      return <Sun className={`${className} text-amber-500`} />
   }
-  if (weather.uvIndex >= 8) {
-    return {
-      tip: "High UV today - wear a hat and garden early morning or evening. Water in the morning to avoid evaporation!",
-      icon: <ShieldAlert className="h-5 w-5 text-orange-500" />
-    }
-  }
-  if (weather.temperature > 90) {
-    return {
-      tip: "Very hot today! Water deeply and consider providing shade for sensitive plants.",
-      icon: <Thermometer className="h-5 w-5 text-red-500" />
-    }
-  }
-  if (weather.temperature < 40) {
-    return {
-      tip: "Chilly today! Cover tender plants tonight and hold off on transplanting seedlings.",
-      icon: <AlertTriangle className="h-5 w-5 text-blue-400" />
-    }
-  }
-  if (weather.windSpeed > 20) {
-    return {
-      tip: "Windy conditions - stake tall plants and avoid spraying fertilizers or pesticides.",
-      icon: <Wind className="h-5 w-5 text-slate-500" />
-    }
-  }
-  return {
-    tip: "Perfect gardening weather! Great day to plant, weed, or just enjoy your garden.",
-    icon: <Sun className="h-5 w-5 text-amber-500" />
-  }
+}
+
+function momTipFromWeather(weather: GardenWeatherData) {
+  const { message, kind } = getGardenWeatherTipMessage(weather)
+  return { tip: message, icon: tipIconForKind(kind) }
 }
 
 function calculateWateringScore(precipitation: number, temp: number, humidity: number): number {
@@ -119,86 +90,42 @@ interface WeatherWidgetProps {
   locationName?: string
 }
 
+function WeatherCardHeader({ location }: { location: GardenWeatherLocation }) {
+  const title = location.source === 'demo' ? 'Demo Forecast' : 'Garden Forecast'
+  const locationSummary = `${location.label}. ${location.note}`
+
+  return (
+    <CardHeader className="pb-3">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <CardTitle className="flex items-center gap-2 text-lg">
+            <Sun className="h-5 w-5 text-amber-500" />
+            {title}
+          </CardTitle>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{locationSummary}</p>
+        </div>
+        {location.source === 'demo' ? (
+          <Badge variant="outline" className="shrink-0 text-[10px]">
+            Demo
+          </Badge>
+        ) : null}
+      </div>
+    </CardHeader>
+  )
+}
+
 export function WeatherWidget({ latitude, longitude, locationName }: WeatherWidgetProps) {
-  const [weather, setWeather] = useState<WeatherData | null>(null)
-  const [sunData, setSunData] = useState<SunData | null>(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState<string | null>(null)
-  
-  // Use provided coordinates or default
-  const lat = latitude || 40.7128
-  const lng = longitude || -74.006
+  const weatherState = useGardenWeather(latitude, longitude, locationName)
+  return <WeatherWidgetContent weatherState={weatherState} />
+}
 
-  useEffect(() => {
-    async function fetchWeather() {
-      try {
-        setLoading(true)
-        
-        // Fetch weather from Open-Meteo
-        const weatherRes = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lng}&current=temperature_2m,relative_humidity_2m,precipitation,weather_code,wind_speed_10m&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,weather_code,uv_index_max&temperature_unit=fahrenheit&wind_speed_unit=mph&timezone=auto`
-        )
-        const weatherData = await weatherRes.json()
-
-        // Fetch sunrise/sunset data
-        const sunRes = await fetch(
-          `https://api.sunrise-sunset.org/json?lat=${lat}&lng=${lng}&formatted=0`
-        )
-        const sunJson = await sunRes.json()
-
-        if (weatherData.current) {
-          setWeather({
-            temperature: Math.round(weatherData.current.temperature_2m),
-            weatherCode: weatherData.current.weather_code,
-            humidity: weatherData.current.relative_humidity_2m,
-            windSpeed: Math.round(weatherData.current.wind_speed_10m),
-            uvIndex: weatherData.daily?.uv_index_max?.[0] || 0,
-            precipitation: weatherData.current.precipitation,
-            daily: weatherData.daily?.time?.slice(0, 3).map((date: string, i: number) => ({
-              date,
-              tempMax: Math.round(weatherData.daily.temperature_2m_max[i]),
-              tempMin: Math.round(weatherData.daily.temperature_2m_min[i]),
-              precipitationSum: weatherData.daily.precipitation_sum[i],
-              weatherCode: weatherData.daily.weather_code[i]
-            })) || []
-          })
-        }
-
-        if (sunJson.results) {
-          const sunrise = new Date(sunJson.results.sunrise)
-          const sunset = new Date(sunJson.results.sunset)
-          const dayLengthMs = sunset.getTime() - sunrise.getTime()
-          const hours = Math.floor(dayLengthMs / 3600000)
-          const minutes = Math.floor((dayLengthMs % 3600000) / 60000)
-          
-          setSunData({
-            sunrise: sunrise.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-            sunset: sunset.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }),
-            dayLength: `${hours}h ${minutes}m`
-          })
-        }
-
-        setError(null)
-      } catch (err) {
-        setError('Unable to fetch weather data')
-        console.error('Weather fetch error:', err)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    fetchWeather()
-  }, [lat, lng])
+export function WeatherWidgetContent({ weatherState }: { weatherState: GardenWeatherState }) {
+  const { weather, sunData, loading, error, location } = weatherState
 
   if (loading) {
     return (
-      <Card className="bg-gradient-to-br from-emerald-50 to-amber-50 dark:from-emerald-950/30 dark:to-amber-950/30 border-emerald-200/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Sun className="h-5 w-5 text-amber-500" />
-            Smart Forecast
-          </CardTitle>
-        </CardHeader>
+      <Card className="bg-linear-to-br from-emerald-50 to-amber-50 dark:from-emerald-950/30 dark:to-amber-950/30 border-emerald-200/50">
+        <WeatherCardHeader location={location} />
         <CardContent className="space-y-4">
           <div className="flex items-center gap-4">
             <Skeleton className="h-16 w-16 rounded-full" />
@@ -215,13 +142,8 @@ export function WeatherWidget({ latitude, longitude, locationName }: WeatherWidg
 
   if (error || !weather) {
     return (
-      <Card className="bg-gradient-to-br from-emerald-50 to-amber-50 dark:from-emerald-950/30 dark:to-amber-950/30 border-emerald-200/50">
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <Sun className="h-5 w-5 text-amber-500" />
-            Smart Forecast
-          </CardTitle>
-        </CardHeader>
+      <Card className="bg-linear-to-br from-emerald-50 to-amber-50 dark:from-emerald-950/30 dark:to-amber-950/30 border-emerald-200/50">
+        <WeatherCardHeader location={location} />
         <CardContent>
           <div className="text-center py-6 text-muted-foreground">
             <Cloud className="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -233,21 +155,15 @@ export function WeatherWidget({ latitude, longitude, locationName }: WeatherWidg
     )
   }
 
-  const momTip = getMomTip(weather, sunData)
+  const momTip = momTipFromWeather(weather)
 
   return (
-    <Card className="bg-gradient-to-br from-emerald-50 to-amber-50 dark:from-emerald-950/30 dark:to-amber-950/30 border-emerald-200/50">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-lg">
-          <Sun className="h-5 w-5 text-amber-500" />
-          Smart Forecast
-        </CardTitle>
-      </CardHeader>
+    <Card className="bg-linear-to-br from-emerald-50 to-amber-50 dark:from-emerald-950/30 dark:to-amber-950/30 border-emerald-200/50">
+      <WeatherCardHeader location={location} />
       <CardContent className="space-y-4">
-        {/* Current Weather */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            {getWeatherIcon(weather.weatherCode, "h-14 w-14")}
+            {getWeatherIcon(weather.weatherCode, 'h-14 w-14')}
             <div>
               <div className="text-4xl font-bold">{weather.temperature}°F</div>
               <div className="text-muted-foreground">{getWeatherDescription(weather.weatherCode)}</div>
@@ -262,13 +178,15 @@ export function WeatherWidget({ latitude, longitude, locationName }: WeatherWidg
               <Wind className="h-4 w-4 text-slate-500" />
               <span>{weather.windSpeed} mph</span>
             </div>
-            <Badge variant={weather.uvIndex >= 6 ? "destructive" : weather.uvIndex >= 3 ? "secondary" : "outline"} className="text-xs">
+            <Badge
+              variant={weather.uvIndex >= 6 ? 'destructive' : weather.uvIndex >= 3 ? 'secondary' : 'outline'}
+              className="text-xs"
+            >
               UV: {weather.uvIndex}
             </Badge>
           </div>
         </div>
 
-        {/* Sunlight Gauge */}
         {sunData && (
           <div className="bg-white/60 dark:bg-black/20 rounded-lg p-3">
             <div className="flex items-center justify-between text-sm mb-2">
@@ -280,7 +198,7 @@ export function WeatherWidget({ latitude, longitude, locationName }: WeatherWidg
                 <Sunrise className="h-4 w-4 text-orange-400" />
                 <span className="text-sm">{sunData.sunrise}</span>
               </div>
-              <div className="flex-1 h-2 bg-gradient-to-r from-orange-200 via-amber-300 to-orange-200 rounded-full" />
+              <div className="flex-1 h-2 bg-linear-to-r from-orange-200 via-amber-300 to-orange-200 rounded-full" />
               <div className="flex items-center gap-1.5">
                 <Sunset className="h-4 w-4 text-orange-500" />
                 <span className="text-sm">{sunData.sunset}</span>
@@ -289,20 +207,24 @@ export function WeatherWidget({ latitude, longitude, locationName }: WeatherWidg
           </div>
         )}
 
-        {/* 3-Day Watering Necessity */}
         <div>
           <div className="text-sm font-medium mb-2">3-Day Watering Forecast</div>
           <div className="grid grid-cols-3 gap-2">
             {weather.daily.map((day, i) => {
               const score = calculateWateringScore(day.precipitationSum, day.tempMax, weather.humidity)
-              const dateLabel = i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })
-              
+              const dateLabel =
+                i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })
+
               return (
                 <div key={day.date} className="bg-white/60 dark:bg-black/20 rounded-lg p-2 text-center">
                   <div className="text-xs text-muted-foreground mb-1">{dateLabel}</div>
-                  {getWeatherIcon(day.weatherCode, "h-6 w-6 mx-auto mb-1")}
-                  <div className="text-xs">{day.tempMax}° / {day.tempMin}°</div>
-                  <div className={`mt-1 text-xs font-medium ${score > 70 ? 'text-red-500' : score > 40 ? 'text-amber-500' : 'text-emerald-500'}`}>
+                  {getWeatherIcon(day.weatherCode, 'h-6 w-6 mx-auto mb-1')}
+                  <div className="text-xs">
+                    {day.tempMax}° / {day.tempMin}°
+                  </div>
+                  <div
+                    className={`mt-1 text-xs font-medium ${score > 70 ? 'text-red-500' : score > 40 ? 'text-amber-500' : 'text-emerald-500'}`}
+                  >
                     {score > 70 ? 'Water!' : score > 40 ? 'Maybe' : 'Skip'}
                   </div>
                 </div>
@@ -311,7 +233,6 @@ export function WeatherWidget({ latitude, longitude, locationName }: WeatherWidg
           </div>
         </div>
 
-        {/* Mom's Tip */}
         <div className="bg-primary/10 rounded-lg p-3 flex items-start gap-3">
           {momTip.icon}
           <div>
@@ -321,5 +242,22 @@ export function WeatherWidget({ latitude, longitude, locationName }: WeatherWidg
         </div>
       </CardContent>
     </Card>
+  )
+}
+
+/** Single calm line for Today when weather suggests a concrete adjustment (hidden on “nice day”). */
+export function WeatherTodayNote({ latitude, longitude, locationName }: WeatherWidgetProps) {
+  const { weather, loading, error } = useGardenWeather(latitude, longitude, locationName)
+
+  if (loading || error || !weather) return null
+  if (!isActionableGardenWeather(weather)) return null
+
+  const { message, kind } = getGardenWeatherTipMessage(weather)
+
+  return (
+    <div className="rounded-xl border border-primary/15 bg-muted/25 px-3 py-2.5 flex gap-2.5 items-start">
+      {tipIconForKind(kind, 'h-4 w-4 mt-0.5')}
+      <p className="text-sm text-muted-foreground leading-snug">{message}</p>
+    </div>
   )
 }

@@ -2,6 +2,14 @@ import type { Plant } from '@/lib/types'
 
 export const DEMO_HOUSEHOLD_ID = 'demo-momma-ds-garden'
 
+export const DEMO_GARDEN_LOCATION = {
+  label: 'Raleigh, NC demo weather',
+  latitude: 35.7796,
+  longitude: -78.6382,
+  source: 'demo',
+  note: 'Using demo weather until a real garden location is saved.',
+} as const
+
 export type DemoGardenSpaceId =
   | 'patio-pots'
   | 'in-ground-bed'

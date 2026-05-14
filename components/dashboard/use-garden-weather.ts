@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react'
+import { DEMO_GARDEN_LOCATION } from '@/lib/demo-garden'
 
 export type GardenWeatherTipKind = 'default' | 'rain' | 'uv' | 'heat' | 'cold' | 'wind'
 
@@ -28,9 +29,18 @@ export interface GardenSunData {
   dayLength: string
 }
 
-interface GardenWeatherState {
+export interface GardenWeatherLocation {
+  label: string
+  latitude: number
+  longitude: number
+  source: 'demo' | 'saved'
+  note: string
+}
+
+export interface GardenWeatherState {
   weather: GardenWeatherData | null
   sunData: GardenSunData | null
+  location: GardenWeatherLocation
   loading: boolean
   error: string | null
 }
@@ -61,8 +71,23 @@ interface SunriseSunsetResponse {
   }
 }
 
-const DEFAULT_LATITUDE = 40.7128
-const DEFAULT_LONGITUDE = -74.006
+function resolveGardenWeatherLocation(
+  latitude?: number | null,
+  longitude?: number | null,
+  locationName?: string
+): GardenWeatherLocation {
+  if (typeof latitude === 'number' && typeof longitude === 'number' && Number.isFinite(latitude) && Number.isFinite(longitude)) {
+    return {
+      label: locationName ?? 'Saved garden location',
+      latitude,
+      longitude,
+      source: 'saved',
+      note: 'Forecast for the saved garden spot.',
+    }
+  }
+
+  return DEMO_GARDEN_LOCATION
+}
 
 function roundWeatherNumber(value: number | undefined, fallback = 0) {
   return Math.round(value ?? fallback)
@@ -147,21 +172,24 @@ export function isActionableGardenWeather(weather: GardenWeatherData) {
   return kind !== 'default'
 }
 
-export function useGardenWeather(latitude?: number | null, longitude?: number | null): GardenWeatherState {
+export function useGardenWeather(latitude?: number | null, longitude?: number | null, locationName?: string): GardenWeatherState {
+  const resolvedLocation = resolveGardenWeatherLocation(latitude, longitude, locationName)
   const [state, setState] = useState<GardenWeatherState>({
     weather: null,
     sunData: null,
+    location: resolvedLocation,
     loading: true,
     error: null,
   })
 
   useEffect(() => {
     const controller = new AbortController()
-    const lat = latitude ?? DEFAULT_LATITUDE
-    const lng = longitude ?? DEFAULT_LONGITUDE
+    const location = resolveGardenWeatherLocation(latitude, longitude, locationName)
+    const lat = location.latitude
+    const lng = location.longitude
 
     async function loadWeather() {
-      setState((current) => ({ ...current, loading: true, error: null }))
+      setState((current) => ({ ...current, location, loading: true, error: null }))
 
       try {
         const weatherUrl = new URL('https://api.open-meteo.com/v1/forecast')
@@ -214,6 +242,7 @@ export function useGardenWeather(latitude?: number | null, longitude?: number | 
             sunset: formatSunTime(sunData.results?.sunset),
             dayLength: formatDayLength(sunData.results?.day_length),
           },
+          location,
           loading: false,
           error: null,
         })
@@ -223,6 +252,7 @@ export function useGardenWeather(latitude?: number | null, longitude?: number | 
         setState({
           weather: null,
           sunData: null,
+          location,
           loading: false,
           error: error instanceof Error ? error.message : 'Unable to load weather data',
         })
@@ -232,7 +262,7 @@ export function useGardenWeather(latitude?: number | null, longitude?: number | 
     void loadWeather()
 
     return () => controller.abort()
-  }, [latitude, longitude])
+  }, [latitude, longitude, locationName])
 
   return state
 }

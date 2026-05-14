@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
+import { useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { WeatherWidget } from './weather-widget'
+import { WeatherWidgetContent } from './weather-widget'
+import { useGardenWeather } from './use-garden-weather'
 import { PlantLibrary } from './plant-library'
-import { TaskList } from './task-list'
 import { GardenLog } from './garden-log'
 import { ServiceProviders } from './service-providers'
 import { GardenSpaces } from './garden-spaces'
@@ -16,22 +15,31 @@ import { MoonPhaseWidget } from './moon-phase-widget'
 import { SeedInventory } from './seed-inventory'
 import { PestLookup } from './pest-lookup'
 import {
-  Sprout,
-  Leaf,
-  Plus,
-  Home,
-  BookOpen,
-  BookHeart,
-  Flower2,
-  Settings,
-  Sun,
-  Droplets,
+  AlertTriangle,
   Bell,
-  Package,
-  MapPin,
+  BookHeart,
+  BookOpen,
   Bug,
+  CheckCircle2,
+  CloudSun,
+  Droplets,
+  Flower2,
+  Home,
+  Leaf,
+  MapPin,
+  Package,
+  Settings,
+  Sparkles,
+  Sprout,
 } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import type { Plant } from '@/lib/types'
+import { demoGardenSpaces } from '@/lib/demo-garden'
+import {
+  buildTodayBrief,
+  type TodayBriefItem,
+  type TodayBriefItemKind,
+} from '@/lib/today-brief'
 
 interface DashboardClientProps {
   plants: Plant[]
@@ -40,16 +48,23 @@ interface DashboardClientProps {
 
 type MainTab = 'today' | 'garden' | 'log' | 'guide'
 
-export function DashboardClient({ plants, householdId }: DashboardClientProps) {
-  const [activeTab, setActiveTab] = useState<MainTab>('today')
-  const [isRainy, setIsRainy] = useState(false)
-  const [showFullTaskList, setShowFullTaskList] = useState(false)
+const briefIcons: Record<TodayBriefItemKind, LucideIcon> = {
+  water: Droplets,
+  support: Sprout,
+  harvest: Leaf,
+  bloom: Flower2,
+  indoor: Home,
+  weather: CloudSun,
+  tidy: CheckCircle2,
+}
 
-  // Check weather for rainy conditions if we have location data
-  useEffect(() => {
-    // Weather checking would go here if we had location data
-    setIsRainy(false)
-  }, [])
+export function DashboardClient({ plants }: DashboardClientProps) {
+  const [activeTab, setActiveTab] = useState<MainTab>('today')
+  const weatherState = useGardenWeather(null, null)
+  const todayBrief = useMemo(
+    () => buildTodayBrief({ spaces: demoGardenSpaces, weather: weatherState.weather }),
+    [weatherState.weather]
+  )
 
   return (
     <div className="min-h-screen bg-linear-to-b from-primary/5 via-background to-accent/5">
@@ -122,9 +137,9 @@ export function DashboardClient({ plants, householdId }: DashboardClientProps) {
           </TabsList>
 
           {/* TODAY */}
-          <TabsContent value="today" className="space-y-6 mt-6">
+          <TabsContent value="today" className="space-y-5 mt-6">
             {/* Featured Garden Photo */}
-            <div className="relative h-48 md:h-56 rounded-2xl overflow-hidden shadow-lg">
+            <div className="relative h-40 md:h-52 rounded-2xl overflow-hidden shadow-lg">
               <img
                 src="https://hebbkx1anhila5yf.public.blob.vercel-storage.com/20220618_180911-PBDTHZW4x1HiwJrf0Vqz8sEWuvlZ2P.jpg"
                 alt="Garden with squash growing on trellis"
@@ -137,100 +152,72 @@ export function DashboardClient({ plants, householdId }: DashboardClientProps) {
               </div>
             </div>
 
-            {/* Weather */}
-            <WeatherWidget latitude={null} longitude={null} />
-
-            {/* Quick Stats */}
-            <div className="grid grid-cols-3 gap-3">
-              <Card className="bg-green-50 dark:bg-green-950/30 border-green-200/50">
-                <CardContent className="pt-4 pb-4 text-center">
-                  <Sprout className="h-6 w-6 text-green-600 dark:text-green-400 mx-auto mb-1" />
-                  <div className="text-2xl font-bold text-green-700 dark:text-green-300">12</div>
-                  <div className="text-xs text-green-600/80 dark:text-green-400/80">Growing</div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-amber-50 dark:bg-amber-950/30 border-amber-200/50">
-                <CardContent className="pt-4 pb-4 text-center">
-                  <Sun className="h-6 w-6 text-amber-600 dark:text-amber-400 mx-auto mb-1" />
-                  <div className="text-2xl font-bold text-amber-700 dark:text-amber-300">3</div>
-                  <div className="text-xs text-amber-600/80 dark:text-amber-400/80">Need Sun</div>
-                </CardContent>
-              </Card>
-
-              <Card className="bg-blue-50 dark:bg-blue-950/30 border-blue-200/50">
-                <CardContent className="pt-4 pb-4 text-center">
-                  <Droplets className="h-6 w-6 text-blue-600 dark:text-blue-400 mx-auto mb-1" />
-                  <div className="text-2xl font-bold text-blue-700 dark:text-blue-300">5</div>
-                  <div className="text-xs text-blue-600/80 dark:text-blue-400/80">Need Water</div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* One-next-step actions */}
-            <Card className="border-primary/20">
+            <Card className="overflow-hidden rounded-2xl border-primary/15 shadow-sm">
               <CardHeader className="pb-3">
-                <CardTitle className="text-lg flex items-center gap-2">
-                  <Plus className="h-5 w-5" />
-                  Quick Actions
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="grid grid-cols-2 gap-3">
-                <Button className="h-auto py-4 flex-col gap-2" asChild>
-                  <Link href="/plants">
-                    <Leaf className="h-5 w-5" />
-                    <span>Add Plant</span>
-                  </Link>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="h-auto py-4 flex-col gap-2"
-                  onClick={() => setActiveTab('log')}
-                >
-                  <BookHeart className="h-5 w-5" />
-                  <span>New Log Entry</span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="h-auto py-4 flex-col gap-2"
-                  onClick={() => setActiveTab('garden')}
-                >
-                  <Sprout className="h-5 w-5" />
-                  <span>View Crops</span>
-                </Button>
-
-                <Button
-                  variant="outline"
-                  className="h-auto py-4 flex-col gap-2"
-                  onClick={() => setActiveTab('guide')}
-                >
-                  <BookOpen className="h-5 w-5" />
-                  <span>Get Advice</span>
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Tasks */}
-            <Card>
-              <CardHeader className="pb-3">
-                <CardTitle className="text-lg">Today&apos;s Tasks</CardTitle>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <CardTitle className="text-lg">Today&apos;s Garden Brief</CardTitle>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      {todayBrief.contextLabel}
+                    </p>
+                  </div>
+                  <span className="rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
+                    Today
+                  </span>
+                </div>
               </CardHeader>
               <CardContent className="space-y-4">
-                <TaskList isRainy={isRainy} compact={!showFullTaskList} />
+                <BriefActionCard item={todayBrief.bestAction} />
 
-                <details
-                  className="rounded-lg border bg-muted/10 p-3"
-                  open={showFullTaskList}
-                  onToggle={(event) => setShowFullTaskList(event.currentTarget.open)}
-                >
-                  <summary className="cursor-pointer text-sm font-medium">
-                    {showFullTaskList ? 'Show fewer tasks' : 'See the full checklist'}
-                  </summary>
-                </details>
+                <div className="rounded-xl border border-primary/10 bg-muted/25 px-3 py-2.5">
+                  <p className="mb-1 text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                    Why this matters
+                  </p>
+                  <p className="text-sm leading-relaxed text-foreground/90">{todayBrief.whyThisMatters}</p>
+                </div>
+
+                {todayBrief.secondaryTasks.length > 0 ? (
+                  <div className="space-y-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                      Small follow-ups
+                    </p>
+                    <div className="space-y-2">
+                      {todayBrief.secondaryTasks.map((task) => (
+                        <BriefSmallTask key={task.id} item={task} />
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+
+                <div className="grid gap-3 md:grid-cols-2">
+                  <BriefSignal
+                    label="Watch out"
+                    item={todayBrief.watchOut}
+                    icon={AlertTriangle}
+                    className="border-amber-200/70 bg-amber-50/70 dark:border-amber-900/50 dark:bg-amber-950/20"
+                  />
+                  <BriefSignal
+                    label="Progress"
+                    item={todayBrief.milestone}
+                    icon={Sparkles}
+                    className="border-emerald-200/70 bg-emerald-50/70 dark:border-emerald-900/50 dark:bg-emerald-950/20"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-1">
+                  <Button variant="outline" className="h-auto py-3" onClick={() => setActiveTab('log')}>
+                    <BookHeart className="mr-2 h-4 w-4" />
+                    Log a note
+                  </Button>
+                  <Button variant="outline" className="h-auto py-3" onClick={() => setActiveTab('garden')}>
+                    <Sprout className="mr-2 h-4 w-4" />
+                    View spaces
+                  </Button>
+                </div>
               </CardContent>
             </Card>
+
+            <WeatherWidgetContent weatherState={weatherState} />
           </TabsContent>
 
           {/* GARDEN */}
@@ -314,6 +301,79 @@ export function DashboardClient({ plants, householdId }: DashboardClientProps) {
       {/* Bottom padding for mobile */}
       <div className="h-6" />
     </div>
+  )
+}
+
+function BriefActionCard({ item }: { item: TodayBriefItem }) {
+  const Icon = briefIcons[item.kind]
+
+  return (
+    <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
+      <p className="mb-2 text-[11px] font-medium uppercase tracking-wide text-primary">
+        Best next step
+      </p>
+      <div className="flex items-start gap-3">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+          <Icon className="h-5 w-5" aria-hidden />
+        </div>
+        <div className="min-w-0">
+          <h3 className="text-base font-semibold leading-tight">{item.title}</h3>
+          <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
+          <BriefContext item={item} />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BriefSmallTask({ item }: { item: TodayBriefItem }) {
+  const Icon = briefIcons[item.kind]
+
+  return (
+    <div className="rounded-xl border border-border/70 bg-background/70 px-3 py-2.5">
+      <div className="flex gap-2.5">
+        <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+        <div className="min-w-0">
+          <p className="text-sm font-medium leading-snug">{item.title}</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.body}</p>
+          <BriefContext item={item} compact />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function BriefSignal({
+  label,
+  item,
+  icon: Icon,
+  className,
+}: {
+  label: string
+  item: TodayBriefItem
+  icon: LucideIcon
+  className: string
+}) {
+  return (
+    <div className={`rounded-xl border px-3 py-3 ${className}`}>
+      <div className="mb-2 flex items-center gap-2">
+        <Icon className="h-4 w-4 shrink-0" aria-hidden />
+        <p className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">{label}</p>
+      </div>
+      <p className="text-sm font-medium leading-snug">{item.title}</p>
+      <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{item.body}</p>
+      <BriefContext item={item} compact />
+    </div>
+  )
+}
+
+function BriefContext({ item, compact = false }: { item: TodayBriefItem; compact?: boolean }) {
+  if (!item.spaceTitle && !item.plantingName) return null
+
+  return (
+    <p className={`${compact ? 'mt-2 text-[11px]' : 'mt-3 text-xs'} leading-snug text-muted-foreground`}>
+      {[item.spaceTitle, item.plantingName].filter(Boolean).join(' - ')}
+    </p>
   )
 }
 
