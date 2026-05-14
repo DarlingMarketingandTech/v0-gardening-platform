@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { checkFamilyInvite, acceptFamilyInvite } from '@/lib/actions/household'
+import { hasPublicSupabaseEnv } from '@/lib/env/supabase-public'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -20,9 +21,12 @@ export default function SignUpPage() {
   const [loading, setLoading] = useState(false)
   const [inviteInfo, setInviteInfo] = useState<{ invited: boolean; household_name?: string } | null>(null)
   const router = useRouter()
-  const supabase = createClient()
+
+  const supabaseConfigured = hasPublicSupabaseEnv()
+  const supabase = useMemo(() => (supabaseConfigured ? createClient() : null), [supabaseConfigured])
 
   const handleEmailBlur = async () => {
+    if (!supabaseConfigured) return
     if (email) {
       const normalized = email.trim().toLowerCase()
       const invite = await checkFamilyInvite(normalized)
@@ -43,12 +47,15 @@ export default function SignUpPage() {
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    if (!supabase) {
+      setError('Sign-up is not available because this environment is not configured yet.')
+      return
+    }
     setLoading(true)
 
     const normalizedEmail = email.trim().toLowerCase()
 
     try {
-      // Verify invite one more time before signup
       const invite = await checkFamilyInvite(normalizedEmail)
       if (!invite.invited) {
         setError(`${normalizedEmail} is not invited to Momma D's Garden.`)
@@ -120,70 +127,89 @@ export default function SignUpPage() {
             Sign up to access the family garden notebook
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleSignUp}>
+
+        {!supabaseConfigured ? (
           <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                type="text"
-                placeholder="John Doe"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                onBlur={handleEmailBlur}
-                required
-                disabled={loading}
-              />
-              {inviteInfo && inviteInfo.invited && (
-                <p className="text-sm text-green-600">
-                  ✓ You&apos;re invited to {inviteInfo.household_name}
-                </p>
-              )}
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Create a password (min 6 characters)"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                minLength={6}
-                disabled={loading}
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Create account
+            <Alert>
+              <AlertDescription>
+                Sign-up is not configured on this deployment yet (missing public Supabase settings). You can still
+                explore the calm demo in{' '}
+                <Link href="/my-garden" className="font-medium text-primary underline underline-offset-2">
+                  My Garden
+                </Link>
+                .
+              </AlertDescription>
+            </Alert>
+            <Button asChild className="w-full">
+              <Link href="/my-garden">Open demo garden</Link>
             </Button>
-            <p className="text-sm text-muted-foreground text-center">
-              Already have an account?{' '}
-              <Link href="/auth/login" className="text-primary hover:underline">
-                Sign in
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
+          </CardContent>
+        ) : (
+          <form onSubmit={handleSignUp}>
+            <CardContent className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="fullName">Full Name</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  placeholder="John Doe"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  onBlur={handleEmailBlur}
+                  required
+                  disabled={loading}
+                />
+                {inviteInfo && inviteInfo.invited && (
+                  <p className="text-sm text-green-600">
+                    ✓ You&apos;re invited to {inviteInfo.household_name}
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Create a password (min 6 characters)"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={6}
+                  disabled={loading}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4">
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Create account
+              </Button>
+              <p className="text-sm text-muted-foreground text-center">
+                Already have an account?{' '}
+                <Link href="/auth/login" className="text-primary hover:underline">
+                  Sign in
+                </Link>
+              </p>
+            </CardFooter>
+          </form>
+        )}
       </Card>
     </div>
   )

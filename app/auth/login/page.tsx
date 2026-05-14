@@ -1,10 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { ensureHouseholdMembership } from '@/lib/actions/household'
+import { hasPublicSupabaseEnv } from '@/lib/env/supabase-public'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -17,12 +18,25 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [configFromRedirect, setConfigFromRedirect] = useState(false)
   const router = useRouter()
-  const supabase = createClient()
+
+  const supabaseConfigured = hasPublicSupabaseEnv()
+  const supabase = useMemo(() => (supabaseConfigured ? createClient() : null), [supabaseConfigured])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const params = new URLSearchParams(window.location.search)
+    setConfigFromRedirect(params.get('error') === 'configuration')
+  }, [])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+    if (!supabase) {
+      setError('Sign-in is not available because this environment is not configured yet.')
+      return
+    }
     setLoading(true)
 
     try {
@@ -83,51 +97,76 @@ export default function LoginPage() {
             Sign in to your garden
           </CardDescription>
         </CardHeader>
-        <form onSubmit={handleLogin}>
+
+        {!supabaseConfigured ? (
           <CardContent className="space-y-4">
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
-              </Alert>
-            )}
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="you@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
-          </CardContent>
-          <CardFooter className="flex flex-col gap-4">
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {loading ? 'Signing in…' : 'Sign in'}
+            <Alert>
+              <AlertDescription>
+                Sign-in is not configured on this deployment yet (missing public Supabase settings). You can still
+                explore the calm demo in{' '}
+                <Link href="/my-garden" className="font-medium text-primary underline underline-offset-2">
+                  My Garden
+                </Link>
+                .
+              </AlertDescription>
+            </Alert>
+            {configFromRedirect ? (
+              <p className="text-sm text-muted-foreground text-center">
+                The page you tried to open needs sign-in, but the preview environment does not have database sign-in
+                enabled.
+              </p>
+            ) : null}
+            <Button asChild className="w-full">
+              <Link href="/my-garden">Open demo garden</Link>
             </Button>
-            <p className="text-sm text-muted-foreground text-center">
-              Don&apos;t have an account?{' '}
-              <Link href="/auth/sign-up" className="text-primary hover:underline">
-                Sign up
-              </Link>
-            </p>
-          </CardFooter>
-        </form>
+          </CardContent>
+        ) : (
+          <form onSubmit={handleLogin}>
+            <CardContent className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  disabled={loading}
+                />
+              </div>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4">
+              <Button type="submit" className="w-full" disabled={loading}>
+                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {loading ? 'Signing in…' : 'Sign in'}
+              </Button>
+              <p className="text-sm text-muted-foreground text-center">
+                Don&apos;t have an account?{' '}
+                <Link href="/auth/sign-up" className="text-primary hover:underline">
+                  Sign up
+                </Link>
+              </p>
+            </CardFooter>
+          </form>
+        )}
       </Card>
     </div>
   )
