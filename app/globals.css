@@ -38,6 +38,26 @@
   --sidebar-accent-foreground: oklch(0.205 0.02 145);
   --sidebar-border: oklch(0.88 0.03 145);
   --sidebar-ring: oklch(0.45 0.15 145);
+
+  /* Garden V2 — semantic aliases (map to existing tokens + derived washes / shadows) */
+  --garden-bg: var(--background);
+  --garden-surface: var(--card);
+  --garden-surface-elevated: color-mix(in oklch, var(--card) 94%, white);
+  --garden-surface-muted: color-mix(in oklch, var(--muted) 55%, var(--card));
+  --garden-primary: var(--primary);
+  /* Pressed / strong primary fill — name references hue depth, not .dark theme */
+  --garden-primary-dark: color-mix(in oklch, var(--primary) 82%, black);
+  --garden-primary-soft: color-mix(in oklch, var(--primary) 14%, var(--card));
+  --garden-water: var(--chart-3);
+  --garden-attention: var(--chart-4);
+  --garden-danger: var(--destructive);
+  --garden-text: var(--foreground);
+  --garden-text-muted: var(--muted-foreground);
+  --garden-border: var(--border);
+  --garden-shadow-soft: 0 4px 24px -6px oklch(0 0 0 / 0.08);
+  --garden-shadow-lifted: 0 12px 40px -12px oklch(0 0 0 / 0.14);
+  --garden-radius-card: 1rem;
+  --garden-radius-pill: 9999px;
 }
 
 .dark {
@@ -73,6 +93,24 @@
   --sidebar-accent-foreground: oklch(0.95 0.01 145);
   --sidebar-border: oklch(0.28 0.03 145);
   --sidebar-ring: oklch(0.6 0.18 145);
+
+  --garden-bg: var(--background);
+  --garden-surface: var(--card);
+  --garden-surface-elevated: color-mix(in oklch, var(--card) 88%, white);
+  --garden-surface-muted: color-mix(in oklch, var(--muted) 68%, var(--card));
+  --garden-primary: var(--primary);
+  --garden-primary-dark: color-mix(in oklch, var(--primary) 86%, black);
+  --garden-primary-soft: color-mix(in oklch, var(--primary) 12%, var(--muted));
+  --garden-water: var(--chart-3);
+  --garden-attention: var(--chart-4);
+  --garden-danger: var(--destructive);
+  --garden-text: var(--foreground);
+  --garden-text-muted: var(--muted-foreground);
+  --garden-border: var(--border);
+  --garden-shadow-soft: 0 4px 28px -8px oklch(0 0 0 / 0.35);
+  --garden-shadow-lifted: 0 16px 48px -14px oklch(0 0 0 / 0.45);
+  --garden-radius-card: 1rem;
+  --garden-radius-pill: 9999px;
 }
 
 @theme inline {
