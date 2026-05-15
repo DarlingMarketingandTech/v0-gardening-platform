@@ -1,0 +1,6 @@
+{
+  "name": "BioSteward",
+  "description": "A precision gardening dashboard for 2026, offering data-driven insights, AI identification, and automated care management.",
+  "requestFramePermissions": ["camera"],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

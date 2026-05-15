@@ -21,6 +21,7 @@ export default tseslint.config(
     ignores: [
       '.next/**',
       'node_modules/**',
+      'reference/**',
       'next-env.d.ts',
       'public/sw.js',
       '*.config.*',
