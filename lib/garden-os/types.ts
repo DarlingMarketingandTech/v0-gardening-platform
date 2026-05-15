@@ -20,10 +20,14 @@ export interface TodayViewModel {
   weatherState: GardenWeatherState
 }
 
+export type GardenZoneCondition = 'stable' | 'needs_water' | 'attention' | 'critical'
+
 export interface GardenZoneCardPlanting {
   id: string
   name: string
   statusLabel: string
+  /** Future: local or CDN thumbnail — omit in demo. */
+  imageUrl?: string
 }
 
 export interface GardenZoneCard {
@@ -36,12 +40,29 @@ export interface GardenZoneCard {
   weeklyAction: string
   plantingCount: number
   plantings: GardenZoneCardPlanting[]
+  areaTypeLabel: string
+  lightExposureLabel: string
+  condition: GardenZoneCondition
+  conditionLabel: string
+  openTaskCount: number
+}
+
+/** Header metrics for the Garden tab — all derived from spaces + zone cards. */
+export interface GardenOverviewSummary {
+  gardenLabel: string | null
+  zoneCount: number
+  plantingCount: number
+  openTaskCount: number
+  /** Zones where a Care check would help soon (condition !== stable). */
+  activeCareCaseCount: number
+  summaryLine: string
 }
 
 export interface GardenViewModel {
   householdId: string | null
   spacesSource: GardenSpacesSource
   zoneCards: GardenZoneCard[]
+  overview: GardenOverviewSummary
   locationLabel: string | null
   isPersonalized: boolean
 }

@@ -35,6 +35,7 @@ export interface ActionPillProps {
   prefetch?: boolean
   /** Used only when `href` is omitted. */
   type?: 'button' | 'submit' | 'reset'
+  onClick?: React.MouseEventHandler<HTMLButtonElement | HTMLAnchorElement>
 }
 
 export function ActionPill({
@@ -47,6 +48,7 @@ export function ActionPill({
   href,
   prefetch,
   type = 'button',
+  onClick,
 }: ActionPillProps) {
   const content = (
     <>
@@ -59,14 +61,14 @@ export function ActionPill({
 
   if (href && !disabled) {
     return (
-      <Link href={href} prefetch={prefetch} className={pillClass}>
+      <Link href={href} prefetch={prefetch} className={pillClass} onClick={onClick}>
         {content}
       </Link>
     )
   }
 
   return (
-    <button type={type} disabled={disabled} className={pillClass}>
+    <button type={type} disabled={disabled} className={pillClass} onClick={onClick}>
       {content}
     </button>
   )

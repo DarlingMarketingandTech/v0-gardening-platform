@@ -1,4 +1,11 @@
 import type { DemoGardenPlanting, DemoGardenSpace } from '@/lib/demo-garden'
+import {
+  areaTypeLabelFromGroup,
+  computeOpenTaskCount,
+  conditionLabelFor,
+  deriveZoneCondition,
+  inferLightExposureLabel,
+} from '@/lib/garden-os/mappers/derive-zone-from-space'
 import type { GardenZoneCard } from '@/lib/garden-os/types'
 
 const statusLabels: Record<DemoGardenPlanting['status'], string> = {
@@ -9,6 +16,7 @@ const statusLabels: Record<DemoGardenPlanting['status'], string> = {
 }
 
 export function mapSpaceToZoneCard(space: DemoGardenSpace): GardenZoneCard {
+  const condition = deriveZoneCondition(space)
   return {
     id: space.id,
     group: space.group,
@@ -23,6 +31,11 @@ export function mapSpaceToZoneCard(space: DemoGardenSpace): GardenZoneCard {
       name: planting.name,
       statusLabel: statusLabels[planting.status],
     })),
+    areaTypeLabel: areaTypeLabelFromGroup(space.group),
+    lightExposureLabel: inferLightExposureLabel(space),
+    condition,
+    conditionLabel: conditionLabelFor(condition),
+    openTaskCount: computeOpenTaskCount(space),
   }
 }
 

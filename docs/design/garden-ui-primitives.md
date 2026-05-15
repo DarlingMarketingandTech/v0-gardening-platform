@@ -191,6 +191,7 @@ Use `AppSurface` (`variant="elevated"` or `tinted`) wrapping a `SectionCard` wit
 
 ## Related docs
 
+- `docs/design/garden-route-upgrade.md` — Phase 5A Garden tab zone UI mapping and view-model notes
 - `docs/design/garden-v2-design-system-map.md`
 - `docs/design/figma-inventory.md`
 - `docs/design/demo-repo-asset-audit.md`
