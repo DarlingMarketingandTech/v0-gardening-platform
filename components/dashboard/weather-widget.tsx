@@ -21,6 +21,7 @@ import {
   useGardenWeather,
   getGardenWeatherTipMessage,
   isActionableGardenWeather,
+  type GardenSunData,
   type GardenWeatherData,
   type GardenWeatherLocation,
   type GardenWeatherState,
@@ -82,6 +83,107 @@ function calculateWateringScore(precipitation: number, temp: number, humidity: n
   if (humidity > 70) score -= 15
   if (humidity < 40) score += 15
   return Math.max(0, Math.min(100, Math.round(score)))
+}
+
+export interface GardenWeatherForecastBodyProps {
+  weather: GardenWeatherData
+  sunData: GardenSunData | null
+  /** When false, omits the tip block (used when the parent already shows the same guidance). */
+  showTip?: boolean
+}
+
+export function GardenWeatherForecastBody({
+  weather,
+  sunData,
+  showTip = true,
+}: GardenWeatherForecastBodyProps) {
+  const momTip = momTipFromWeather(weather)
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex min-w-0 items-center gap-4">
+          {getWeatherIcon(weather.weatherCode, 'h-14 w-14 shrink-0')}
+          <div className="min-w-0">
+            <div className="text-4xl font-bold tabular-nums">{weather.temperature}°F</div>
+            <div className="text-muted-foreground">{getWeatherDescription(weather.weatherCode)}</div>
+          </div>
+        </div>
+        <div className="shrink-0 space-y-1 text-right">
+          <div className="flex items-center justify-end gap-1 text-sm">
+            <Droplets className="h-4 w-4 text-blue-500" aria-hidden />
+            <span>{weather.humidity}%</span>
+          </div>
+          <div className="flex items-center justify-end gap-1 text-sm">
+            <Wind className="h-4 w-4 text-slate-500" aria-hidden />
+            <span>{weather.windSpeed} mph</span>
+          </div>
+          <Badge
+            variant={weather.uvIndex >= 6 ? 'destructive' : weather.uvIndex >= 3 ? 'secondary' : 'outline'}
+            className="text-xs"
+          >
+            UV: {weather.uvIndex}
+          </Badge>
+        </div>
+      </div>
+
+      {sunData ? (
+        <div className="rounded-lg bg-white/60 p-3 dark:bg-black/20">
+          <div className="mb-2 flex items-center justify-between text-sm">
+            <span className="font-medium">Sunlight Today</span>
+            <span className="text-muted-foreground">{sunData.dayLength}</span>
+          </div>
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-1.5">
+              <Sunrise className="h-4 w-4 text-orange-400" aria-hidden />
+              <span className="text-sm">{sunData.sunrise}</span>
+            </div>
+            <div className="h-2 flex-1 rounded-full bg-linear-to-r from-orange-200 via-amber-300 to-orange-200" />
+            <div className="flex items-center gap-1.5">
+              <Sunset className="h-4 w-4 text-orange-500" aria-hidden />
+              <span className="text-sm">{sunData.sunset}</span>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      <div>
+        <div className="mb-2 text-sm font-medium">3-Day Watering Forecast</div>
+        <div className="grid grid-cols-3 gap-2">
+          {weather.daily.map((day, i) => {
+            const score = calculateWateringScore(day.precipitationSum, day.tempMax, weather.humidity)
+            const dateLabel =
+              i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })
+
+            return (
+              <div key={day.date} className="rounded-lg bg-white/60 p-2 text-center dark:bg-black/20">
+                <div className="mb-1 text-xs text-muted-foreground">{dateLabel}</div>
+                {getWeatherIcon(day.weatherCode, 'mx-auto mb-1 h-6 w-6')}
+                <div className="text-xs">
+                  {day.tempMax}° / {day.tempMin}°
+                </div>
+                <div
+                  className={`mt-1 text-xs font-medium ${score > 70 ? 'text-red-500' : score > 40 ? 'text-amber-500' : 'text-emerald-500'}`}
+                >
+                  {score > 70 ? 'Water!' : score > 40 ? 'Maybe' : 'Skip'}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {showTip ? (
+        <div className="flex items-start gap-3 rounded-lg bg-primary/10 p-3">
+          {momTip.icon}
+          <div className="min-w-0">
+            <div className="mb-0.5 text-sm font-medium">Mom&apos;s Tip</div>
+            <p className="text-sm text-muted-foreground">{momTip.tip}</p>
+          </div>
+        </div>
+      ) : null}
+    </div>
+  )
 }
 
 interface WeatherWidgetProps {
@@ -155,91 +257,11 @@ export function WeatherWidgetContent({ weatherState }: { weatherState: GardenWea
     )
   }
 
-  const momTip = momTipFromWeather(weather)
-
   return (
     <Card className="bg-linear-to-br from-emerald-50 to-amber-50 dark:from-emerald-950/30 dark:to-amber-950/30 border-emerald-200/50">
       <WeatherCardHeader location={location} />
       <CardContent className="space-y-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            {getWeatherIcon(weather.weatherCode, 'h-14 w-14')}
-            <div>
-              <div className="text-4xl font-bold">{weather.temperature}°F</div>
-              <div className="text-muted-foreground">{getWeatherDescription(weather.weatherCode)}</div>
-            </div>
-          </div>
-          <div className="text-right space-y-1">
-            <div className="flex items-center justify-end gap-1 text-sm">
-              <Droplets className="h-4 w-4 text-blue-500" />
-              <span>{weather.humidity}%</span>
-            </div>
-            <div className="flex items-center justify-end gap-1 text-sm">
-              <Wind className="h-4 w-4 text-slate-500" />
-              <span>{weather.windSpeed} mph</span>
-            </div>
-            <Badge
-              variant={weather.uvIndex >= 6 ? 'destructive' : weather.uvIndex >= 3 ? 'secondary' : 'outline'}
-              className="text-xs"
-            >
-              UV: {weather.uvIndex}
-            </Badge>
-          </div>
-        </div>
-
-        {sunData && (
-          <div className="bg-white/60 dark:bg-black/20 rounded-lg p-3">
-            <div className="flex items-center justify-between text-sm mb-2">
-              <span className="font-medium">Sunlight Today</span>
-              <span className="text-muted-foreground">{sunData.dayLength}</span>
-            </div>
-            <div className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5">
-                <Sunrise className="h-4 w-4 text-orange-400" />
-                <span className="text-sm">{sunData.sunrise}</span>
-              </div>
-              <div className="flex-1 h-2 bg-linear-to-r from-orange-200 via-amber-300 to-orange-200 rounded-full" />
-              <div className="flex items-center gap-1.5">
-                <Sunset className="h-4 w-4 text-orange-500" />
-                <span className="text-sm">{sunData.sunset}</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div>
-          <div className="text-sm font-medium mb-2">3-Day Watering Forecast</div>
-          <div className="grid grid-cols-3 gap-2">
-            {weather.daily.map((day, i) => {
-              const score = calculateWateringScore(day.precipitationSum, day.tempMax, weather.humidity)
-              const dateLabel =
-                i === 0 ? 'Today' : i === 1 ? 'Tomorrow' : new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })
-
-              return (
-                <div key={day.date} className="bg-white/60 dark:bg-black/20 rounded-lg p-2 text-center">
-                  <div className="text-xs text-muted-foreground mb-1">{dateLabel}</div>
-                  {getWeatherIcon(day.weatherCode, 'h-6 w-6 mx-auto mb-1')}
-                  <div className="text-xs">
-                    {day.tempMax}° / {day.tempMin}°
-                  </div>
-                  <div
-                    className={`mt-1 text-xs font-medium ${score > 70 ? 'text-red-500' : score > 40 ? 'text-amber-500' : 'text-emerald-500'}`}
-                  >
-                    {score > 70 ? 'Water!' : score > 40 ? 'Maybe' : 'Skip'}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-
-        <div className="bg-primary/10 rounded-lg p-3 flex items-start gap-3">
-          {momTip.icon}
-          <div>
-            <div className="text-sm font-medium mb-0.5">Mom&apos;s Tip</div>
-            <p className="text-sm text-muted-foreground">{momTip.tip}</p>
-          </div>
-        </div>
+        <GardenWeatherForecastBody weather={weather} sunData={sunData} />
       </CardContent>
     </Card>
   )

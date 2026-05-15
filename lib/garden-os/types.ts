@@ -14,10 +14,47 @@ export interface GardenContext {
   plants: Plant[]
 }
 
+export type TodayForecastSpaceTone = 'stable' | 'watch' | 'water' | 'attention'
+
+export interface TodayForecastSpaceCheck {
+  id: string
+  name: string
+  areaTypeLabel: string
+  /** User-facing zone condition (Stable, Needs water, …). */
+  condition: string
+  impactLabel: string
+  recommendation: string
+  tone: TodayForecastSpaceTone
+  plantCount?: number
+  openTaskCount?: number
+}
+
+export interface TodayWeatherBrief {
+  headline: string
+  summary: string
+  forecastImpact: string
+  chips: string[]
+  spaceChecks: TodayForecastSpaceCheck[]
+}
+
+export interface TodayInsightCard {
+  label: string
+  title: string
+  body: string
+}
+
+export interface TodayInsightsRowModel {
+  watch: TodayInsightCard
+  progress: TodayInsightCard
+  upcoming: TodayInsightCard
+}
+
 export interface TodayViewModel {
   brief: TodayBrief
   greeting: string
   weatherState: GardenWeatherState
+  weatherBrief: TodayWeatherBrief
+  insights: TodayInsightsRowModel
 }
 
 export type GardenZoneCondition = 'stable' | 'needs_water' | 'attention' | 'critical'
