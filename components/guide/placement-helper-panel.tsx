@@ -24,7 +24,7 @@ export function PlacementHelperPanel({ spaces }: PlacementHelperPanelProps) {
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <MapPin className="h-4 w-4 text-primary" />
-          Where should this go?
+          Plant Check
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           A quick placement hint based on your spaces — not a full planner.

@@ -10,10 +10,10 @@ export function KnowledgeSnippetsPanel() {
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Library className="h-4 w-4 text-primary" />
-          Trusted tips
+          Symptom Check
         </CardTitle>
         <p className="text-sm text-muted-foreground">
-          Short guidance with sources — science stays collapsible, not overwhelming.
+          Short guidance with sources — calm follow-up when something looks off.
         </p>
       </CardHeader>
       <CardContent className="space-y-3">

@@ -136,7 +136,7 @@ export function PestLookup() {
         {/* Header */}
         <div className="flex items-center gap-2 mb-4">
           <Bug className="h-5 w-5 text-orange-600 dark:text-orange-400" />
-          <h3 className="font-semibold text-foreground">Troubleshoot a Problem</h3>
+          <h3 className="font-semibold text-foreground">Pest Lookup</h3>
         </div>
         
         {/* Search Bar */}

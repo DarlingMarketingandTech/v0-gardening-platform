@@ -49,7 +49,7 @@ export function PlantIdentifyPanel() {
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <ScanLine className="h-5 w-5 text-emerald-600" />
-          Identify a plant
+          Plant Identify
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           Snap or upload a photo. We show a calm guess with confidence — not a chatbot.
