@@ -4,17 +4,17 @@ import type { DemoGardenSpace } from '@/lib/demo-garden'
 export const careToolDescriptors: CareToolDescriptor[] = [
   {
     id: 'plant-check',
-    label: 'Plant Check',
+    label: 'Plant check',
     description: 'A quick placement hint based on your spaces — not a full planner.',
   },
   {
     id: 'symptom-check',
-    label: 'Symptom Check',
+    label: 'Symptom check',
     description: 'Short guidance with sources — calm follow-up when something looks off.',
   },
   {
     id: 'pest-lookup',
-    label: 'Pest Lookup',
+    label: 'Pest lookup',
     description: 'Search common garden pests and problems for practical next steps.',
   },
   {
@@ -32,7 +32,7 @@ export function mapGuideToolsToCareViewModel(
     householdId,
     spaces,
     headline: 'Care',
-    summary: 'Plant checks, symptoms, pests, and follow-up guidance.',
+    summary: 'Identify plants, check placement and symptoms, and look up pests — calm guidance for Momma D.',
     tools: careToolDescriptors,
   }
 }

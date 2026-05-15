@@ -1,0 +1,18 @@
+---
+description: Rules for reference-only folders
+globs:
+  - "reference/**"
+alwaysApply: false
+---
+
+Folders under `reference/` are read-only inspiration/reference material.
+
+Do not:
+
+- import from `reference/**`
+- compile files from `reference/**`
+- install dependencies inside reference projects
+- copy Firebase, Supabase, Next config, or app routing directly into production
+- treat reference apps as runnable sub-apps
+
+Use reference folders only to audit patterns and reimplement useful ideas inside the current app's actual architecture.

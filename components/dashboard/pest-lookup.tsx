@@ -131,7 +131,7 @@ export function PestLookup() {
   }
 
   return (
-    <Card className="border-orange-200/50 dark:border-orange-800/30 bg-gradient-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-950/20 dark:to-amber-950/20">
+    <Card className="border-orange-200/50 dark:border-orange-800/30 bg-linear-to-br from-orange-50/50 to-amber-50/50 dark:from-orange-950/20 dark:to-amber-950/20">
       <CardContent className="p-4">
         {/* Header */}
         <div className="flex items-center gap-2 mb-4">

@@ -10,7 +10,7 @@ export function KnowledgeSnippetsPanel() {
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <Library className="h-4 w-4 text-primary" />
-          Symptom Check
+          Symptom check
         </CardTitle>
         <p className="text-sm text-muted-foreground">
           Short guidance with sources — calm follow-up when something looks off.
