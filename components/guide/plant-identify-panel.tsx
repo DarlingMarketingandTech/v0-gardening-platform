@@ -45,7 +45,7 @@ export function PlantIdentifyPanel() {
   }
 
   return (
-    <Card className="border-emerald-200/50 bg-gradient-to-br from-emerald-50/80 to-teal-50/50 dark:from-emerald-950/20 dark:to-teal-950/10">
+    <Card className="border-emerald-200/50 bg-linear-to-br from-emerald-50/80 to-teal-50/50 dark:from-emerald-950/20 dark:to-teal-950/10">
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center gap-2">
           <ScanLine className="h-5 w-5 text-emerald-600" />

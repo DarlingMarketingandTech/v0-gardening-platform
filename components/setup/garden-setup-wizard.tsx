@@ -57,7 +57,7 @@ export function GardenSetupWizard({ householdId, initialDisplayName }: GardenSet
   const canContinue = validateStep(step, answers)
 
   return (
-    <div className="min-h-[100dvh] flex flex-col bg-linear-to-b from-primary/5 via-background to-accent/5">
+    <div className="min-h-dvh flex flex-col bg-linear-to-b from-primary/5 via-background to-accent/5">
       <header className="shrink-0 border-b border-primary/10 bg-background/90 backdrop-blur px-4 py-3">
         <div className="flex items-center gap-2 max-w-lg mx-auto">
           <Leaf className="h-5 w-5 text-primary shrink-0" />
