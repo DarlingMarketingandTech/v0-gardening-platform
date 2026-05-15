@@ -3,7 +3,7 @@ import { type EmailOtpType } from '@supabase/supabase-js'
 import { NextRequest, NextResponse } from 'next/server'
 
 function safeNextPath(raw: string | null): string {
-  const fallback = '/pending-approval'
+  const fallback = '/my-garden'
   if (!raw || !raw.startsWith('/')) return fallback
   if (raw.startsWith('//')) return fallback
   return raw

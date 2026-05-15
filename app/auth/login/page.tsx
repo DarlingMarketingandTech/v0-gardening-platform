@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { claimPrivateBetaHousehold, resolvePrivateBetaDestination } from '@/lib/access/private-beta'
 import { hasPublicSupabaseEnv } from '@/lib/env/supabase-public'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -11,7 +12,6 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Leaf, Loader2 } from 'lucide-react'
-import { resolvePostLoginPath } from '@/lib/access/private-beta'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -50,30 +50,13 @@ export default function LoginPage() {
         return
       }
 
-      const {
-        data: { user },
-        error: userError,
-      } = await supabase.auth.getUser()
-
-      if (userError || !user) {
-        setError(userError?.message ?? 'Could not load your account. Please try again.')
+      const claim = await claimPrivateBetaHousehold(supabase)
+      if (!claim.success && !claim.notAllowlisted && claim.errorMessage) {
+        setError('You signed in, but we could not set up your garden access. Please try again.')
         return
       }
 
-      const { data: membership, error: membershipError } = await supabase
-        .from('household_members')
-        .select('household_id, role')
-        .eq('user_id', user.id)
-        .maybeSingle()
-
-      if (membershipError) {
-        setError('You signed in, but we could not check your garden access. Please try again.')
-        return
-      }
-
-      const hasHousehold = Boolean(membership?.household_id)
-      const path = resolvePostLoginPath(membership?.role, hasHousehold)
-      router.replace(path)
+      router.replace(resolvePrivateBetaDestination(claim))
       router.refresh()
     } catch (err) {
       console.error('Login failed:', err)
@@ -92,9 +75,7 @@ export default function LoginPage() {
             <span className="text-2xl font-bold">Momma D&apos;s Garden</span>
           </Link>
           <CardTitle className="text-2xl">Welcome back</CardTitle>
-          <CardDescription>
-            Sign in to your garden
-          </CardDescription>
+          <CardDescription>Sign in to your garden</CardDescription>
         </CardHeader>
 
         {!supabaseConfigured ? (

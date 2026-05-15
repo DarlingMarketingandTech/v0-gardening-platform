@@ -28,6 +28,7 @@ function isPublicDemoPath(pathname: string): boolean {
     '/auth/confirm',
     '/auth/signout',
     '/auth/error',
+    '/not-allowed',
     '/pending-approval',
     '/admin/access-requests',
     '/setup',

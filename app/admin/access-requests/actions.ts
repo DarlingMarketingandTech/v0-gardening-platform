@@ -2,14 +2,15 @@
 
 import { revalidatePath } from 'next/cache'
 import { createClient } from '@/lib/supabase/server'
-import { getPrivateBetaHouseholdId } from '@/lib/access/private-beta'
+import { getUserHousehold } from '@/lib/actions/household'
 
 export type ActionResult = { ok: true } | { ok: false; error: string }
 
+/** @deprecated Legacy shared-household access requests; private beta now uses email allowlist. */
 export async function submitAccessRequest(displayName?: string | null): Promise<ActionResult> {
-  const householdId = getPrivateBetaHouseholdId()
+  const { household_id: householdId } = await getUserHousehold()
   if (!householdId) {
-    return { ok: false, error: 'Garden access is not configured for this deployment yet.' }
+    return { ok: false, error: 'You need an approved garden before using this legacy request flow.' }
   }
 
   const supabase = await createClient()
@@ -29,7 +30,6 @@ export async function submitAccessRequest(displayName?: string | null): Promise<
     return { ok: false, error: error.message }
   }
 
-  revalidatePath('/pending-approval')
   revalidatePath('/admin/access-requests')
   return { ok: true }
 }
@@ -47,8 +47,8 @@ export async function approveAccessRequest(
     return { ok: false, error: error.message }
   }
   revalidatePath('/admin/access-requests')
-  revalidatePath('/pending-approval')
   revalidatePath('/my-garden')
+  revalidatePath('/not-allowed')
   return { ok: true }
 }
 

@@ -24,7 +24,7 @@ export default async function AccessRequestsAdminPage() {
 
   const { household_id: householdId, role } = await getUserHousehold()
   if (!householdId) {
-    redirect('/pending-approval')
+    redirect('/not-allowed')
   }
   if (role !== 'owner' && role !== 'admin') {
     redirect('/my-garden')
@@ -48,7 +48,9 @@ export default async function AccessRequestsAdminPage() {
             </div>
             <div>
               <h1 className="font-semibold text-lg leading-tight">Access requests</h1>
-              <p className="text-xs text-muted-foreground">Approve family members for your garden</p>
+              <p className="text-xs text-muted-foreground">
+                Legacy — private beta now uses email allowlist. Use only if you still receive join requests.
+              </p>
             </div>
           </div>
           <Button variant="outline" size="sm" asChild>

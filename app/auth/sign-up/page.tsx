@@ -4,8 +4,8 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { claimPrivateBetaHousehold, resolvePrivateBetaDestination } from '@/lib/access/private-beta'
 import { hasPublicSupabaseEnv } from '@/lib/env/supabase-public'
-import { getPrivateBetaHouseholdId, isPrivateBetaHouseholdConfigured } from '@/lib/access/private-beta'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -35,7 +35,7 @@ export default function SignUpPage() {
 
     const normalizedEmail = email.trim().toLowerCase()
     const origin = typeof window !== 'undefined' ? window.location.origin : ''
-    const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent('/pending-approval')}`
+    const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent('/my-garden')}`
 
     try {
       const { data, error: signUpError } = await supabase.auth.signUp({
@@ -60,19 +60,13 @@ export default function SignUpPage() {
         return
       }
 
-      const householdId = getPrivateBetaHouseholdId()
-      if (isPrivateBetaHouseholdConfigured() && householdId) {
-        const { error: requestError } = await supabase.rpc('request_household_access', {
-          p_household_id: householdId,
-          p_display_name: fullName.trim() || null,
-        })
-        if (requestError) {
-          setError(requestError.message)
-          return
-        }
+      const claim = await claimPrivateBetaHousehold(supabase)
+      if (!claim.success && !claim.notAllowlisted && claim.errorMessage) {
+        setError(claim.errorMessage)
+        return
       }
 
-      router.replace('/pending-approval')
+      router.replace(resolvePrivateBetaDestination(claim))
       router.refresh()
     } catch (err) {
       console.error('Sign up failed:', err)
@@ -92,7 +86,7 @@ export default function SignUpPage() {
           </Link>
           <CardTitle className="text-2xl">Join Momma D&apos;s Garden</CardTitle>
           <CardDescription>
-            Create an account. A garden admin approves access before you see the full family notebook.
+            Create an account with the email Jacob added to the private beta list.
           </CardDescription>
         </CardHeader>
 

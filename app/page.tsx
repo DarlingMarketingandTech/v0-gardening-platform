@@ -3,8 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Leaf } from 'lucide-react'
 import { hasPublicSupabaseEnv } from '@/lib/env/supabase-public'
 import { createClient } from '@/lib/supabase/server'
-import { getUserHousehold } from '@/lib/actions/household'
-import { resolvePostLoginPath } from '@/lib/access/private-beta'
+import { getMyHouseholdMembership } from '@/lib/access/private-beta'
 
 export default async function Home() {
   let signedInContinueHref = '/my-garden'
@@ -16,14 +15,9 @@ export default async function Home() {
       data: { user },
     } = await supabase.auth.getUser()
     if (user) {
-      const { household_id, role } = await getUserHousehold()
-      const hasHousehold = Boolean(household_id)
-      signedInContinueHref = resolvePostLoginPath(role, hasHousehold)
-      signedInContinueLabel = hasHousehold
-        ? role === 'owner' || role === 'admin'
-          ? 'Review access requests'
-          : 'Continue to your garden'
-        : 'Check access status'
+      const { householdId } = await getMyHouseholdMembership(supabase)
+      signedInContinueHref = householdId ? '/my-garden' : '/auth/login'
+      signedInContinueLabel = householdId ? 'Continue to your garden' : 'Sign in to your garden'
     }
   }
 
