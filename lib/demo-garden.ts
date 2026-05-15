@@ -207,6 +207,62 @@ export const demoGardenSpaces: DemoGardenSpace[] = [
   },
 ]
 
+export type DemoSpacesAccordionSectionId =
+  | 'outdoor-beds'
+  | 'containers'
+  | 'indoor-plants'
+  | 'seed-starting'
+  | 'problem-plants'
+
+export interface DemoSpacesAccordionSection {
+  id: DemoSpacesAccordionSectionId
+  title: string
+  summary: string
+  spaceIds: DemoGardenSpaceId[]
+  /** When `spaceIds` is empty, show this copy instead of space cards */
+  emptyContent?: string
+}
+
+/** Product-facing accordion groups for the Garden tab (demo data only). */
+export const demoSpacesAccordionSections: DemoSpacesAccordionSection[] = [
+  {
+    id: 'outdoor-beds',
+    title: 'Outdoor beds',
+    summary: 'In-ground, raised bed, and pollinator border',
+    spaceIds: ['in-ground-bed', 'raised-bed-trellis', 'pollinator-border'],
+  },
+  {
+    id: 'containers',
+    title: 'Containers',
+    summary: 'Patio pots you can check on the way in and out',
+    spaceIds: ['patio-pots'],
+  },
+  {
+    id: 'indoor-plants',
+    title: 'Indoor plants',
+    summary: 'Windowsills, shelves, and a humid bathroom corner',
+    spaceIds: ['kitchen-window', 'living-room-plant-shelf', 'bathroom-fern-corner', 'bedroom-windowsill'],
+  },
+  {
+    id: 'seed-starting',
+    title: 'Seed starting',
+    summary: 'Light, warmth, and gentle moisture when you are ready',
+    spaceIds: [],
+    emptyContent:
+      "This demo keeps seed inventory light. When you are ready to plan starts, open the Guide and expand Seeds for a simple checklist rhythm.",
+  },
+  {
+    id: 'problem-plants',
+    title: 'Problem plants',
+    summary: 'Spaces worth a closer look this week',
+    spaceIds: ['in-ground-bed', 'raised-bed-trellis'],
+  },
+]
+
+export function getDemoGardenSpaceById(id: DemoGardenSpaceId): DemoGardenSpace | undefined {
+  return demoGardenSpaces.find((s) => s.id === id)
+}
+
 export const demoPlants: Plant[] = [
   {
     id: 'demo-tomato',
