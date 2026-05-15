@@ -23,7 +23,13 @@ function isPublicDemoPath(pathname: string): boolean {
     '/auth/login',
     '/auth/sign-up',
     '/auth/sign-up-success',
+    '/auth/check-email',
+    '/auth/update-password',
+    '/auth/confirm',
+    '/auth/signout',
     '/auth/error',
+    '/pending-approval',
+    '/admin/access-requests',
     '/setup',
     '/profile',
   ]

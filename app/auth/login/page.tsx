@@ -4,7 +4,6 @@ import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { ensureHouseholdMembership } from '@/lib/actions/household'
 import { hasPublicSupabaseEnv } from '@/lib/env/supabase-public'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -12,6 +11,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Leaf, Loader2 } from 'lucide-react'
+import { resolvePostLoginPath } from '@/lib/access/private-beta'
 
 export default function LoginPage() {
   const [email, setEmail] = useState('')
@@ -60,21 +60,20 @@ export default function LoginPage() {
         return
       }
 
-      const sessionEmail = user.email?.trim() ? user.email.trim().toLowerCase() : email.trim().toLowerCase()
-      const displayName =
-        typeof user.user_metadata?.full_name === 'string' ? user.user_metadata.full_name : undefined
+      const { data: membership, error: membershipError } = await supabase
+        .from('household_members')
+        .select('household_id, role')
+        .eq('user_id', user.id)
+        .maybeSingle()
 
-      const membership = await ensureHouseholdMembership(sessionEmail, user.id, displayName)
-
-      if (!membership.success) {
-        setError(
-          membership.error ??
-            "You signed in, but we could not connect you to Momma D's Garden. Please check your invite setup.",
-        )
+      if (membershipError) {
+        setError('You signed in, but we could not check your garden access. Please try again.')
         return
       }
 
-      router.replace('/my-garden')
+      const hasHousehold = Boolean(membership?.household_id)
+      const path = resolvePostLoginPath(membership?.role, hasHousehold)
+      router.replace(path)
       router.refresh()
     } catch (err) {
       console.error('Login failed:', err)

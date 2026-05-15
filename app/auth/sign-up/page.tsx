@@ -4,8 +4,8 @@ import { useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import { checkFamilyInvite, acceptFamilyInvite } from '@/lib/actions/household'
 import { hasPublicSupabaseEnv } from '@/lib/env/supabase-public'
+import { getPrivateBetaHouseholdId, isPrivateBetaHouseholdConfigured } from '@/lib/access/private-beta'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -19,30 +19,10 @@ export default function SignUpPage() {
   const [fullName, setFullName] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [inviteInfo, setInviteInfo] = useState<{ invited: boolean; household_name?: string } | null>(null)
   const router = useRouter()
 
   const supabaseConfigured = hasPublicSupabaseEnv()
   const supabase = useMemo(() => (supabaseConfigured ? createClient() : null), [supabaseConfigured])
-
-  const handleEmailBlur = async () => {
-    if (!supabaseConfigured) return
-    if (email) {
-      const normalized = email.trim().toLowerCase()
-      const invite = await checkFamilyInvite(normalized)
-      setInviteInfo({
-        invited: invite.invited,
-        household_name: invite.household_name ?? undefined,
-      })
-      if (!invite.invited) {
-        setError(
-          `${normalized} is not invited to Momma D's Garden. Please contact the garden admin.`,
-        )
-      } else {
-        setError(null)
-      }
-    }
-  }
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -54,18 +34,15 @@ export default function SignUpPage() {
     setLoading(true)
 
     const normalizedEmail = email.trim().toLowerCase()
+    const origin = typeof window !== 'undefined' ? window.location.origin : ''
+    const emailRedirectTo = `${origin}/auth/callback?next=${encodeURIComponent('/pending-approval')}`
 
     try {
-      const invite = await checkFamilyInvite(normalizedEmail)
-      if (!invite.invited) {
-        setError(`${normalizedEmail} is not invited to Momma D's Garden.`)
-        return
-      }
-
-      const { error: signUpError } = await supabase.auth.signUp({
+      const { data, error: signUpError } = await supabase.auth.signUp({
         email: normalizedEmail,
         password,
         options: {
+          emailRedirectTo,
           data: {
             full_name: fullName,
           },
@@ -77,34 +54,25 @@ export default function SignUpPage() {
         return
       }
 
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-      if (!user) {
-        setError('Failed to create account. If email confirmation is required, confirm your email and sign in.')
+      if (!data.session) {
+        router.replace(`/auth/check-email?email=${encodeURIComponent(normalizedEmail)}`)
+        router.refresh()
         return
       }
 
-      const { success: acceptSuccess, error: acceptError } = await acceptFamilyInvite(
-        normalizedEmail,
-        user.id,
-        fullName,
-      )
-      if (!acceptSuccess) {
-        setError(acceptError || 'Failed to join household')
-        return
+      const householdId = getPrivateBetaHouseholdId()
+      if (isPrivateBetaHouseholdConfigured() && householdId) {
+        const { error: requestError } = await supabase.rpc('request_household_access', {
+          p_household_id: householdId,
+          p_display_name: fullName.trim() || null,
+        })
+        if (requestError) {
+          setError(requestError.message)
+          return
+        }
       }
 
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: normalizedEmail,
-        password,
-      })
-      if (signInError) {
-        setError(signInError.message)
-        return
-      }
-
-      router.push('/my-garden')
+      router.replace('/pending-approval')
       router.refresh()
     } catch (err) {
       console.error('Sign up failed:', err)
@@ -124,7 +92,7 @@ export default function SignUpPage() {
           </Link>
           <CardTitle className="text-2xl">Join Momma D&apos;s Garden</CardTitle>
           <CardDescription>
-            Sign up to access the family garden notebook
+            Create an account. A garden admin approves access before you see the full family notebook.
           </CardDescription>
         </CardHeader>
 
@@ -172,15 +140,9 @@ export default function SignUpPage() {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  onBlur={handleEmailBlur}
                   required
                   disabled={loading}
                 />
-                {inviteInfo && inviteInfo.invited && (
-                  <p className="text-sm text-green-600">
-                    ✓ You&apos;re invited to {inviteInfo.household_name}
-                  </p>
-                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="password">Password</Label>

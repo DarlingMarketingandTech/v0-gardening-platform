@@ -58,7 +58,7 @@ const briefIcons: Record<TodayBriefItemKind, LucideIcon> = {
   tidy: CheckCircle2,
 }
 
-export function DashboardClient({ plants }: DashboardClientProps) {
+export function DashboardClient({ plants, householdId = null }: DashboardClientProps) {
   const [activeTab, setActiveTab] = useState<MainTab>('today')
   const weatherState = useGardenWeather(null, null)
   const todayBrief = useMemo(
@@ -67,7 +67,11 @@ export function DashboardClient({ plants }: DashboardClientProps) {
   )
 
   return (
-    <div className="min-h-screen bg-linear-to-b from-primary/5 via-background to-accent/5">
+    <div
+      key={householdId ?? 'demo'}
+      className="min-h-screen bg-linear-to-b from-primary/5 via-background to-accent/5"
+      data-household-id={householdId ?? undefined}
+    >
       {/* Header */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur border-b border-primary/10">
         <div className="container px-4 py-4 flex items-center justify-between">
