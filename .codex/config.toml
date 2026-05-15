@@ -1,0 +1,103 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+# Momma D's Garden — project-scoped Codex overrides (trusted repo only).
+# Loaded when working in this repository. Global defaults live in ~/.codex/config.toml.
+
+profile = "momma-d-garden"
+
+# Do not auto-commit unless Jacob explicitly asks.
+autocommit = false
+
+file_opener = "cursor"
+
+[profiles.momma-d-garden]
+model = "gpt-5.2"
+model_reasoning_effort = "high"
+personality = "pragmatic"
+web_search = "cached"
+tools.view_image = true
+
+# Injected before AGENTS.md for every session in this repo.
+developer_instructions = """
+You are building Momma D's Garden — a calm, mobile-first family gardening companion (not generic SaaS).
+
+## North star (2026 direction)
+Help beginners feel capable, proud, and relaxed while caring for plants: one clear next step, gentle achievement, and optional depth. Gardening is also emotional wellness — copy and UX should feel warm, never naggy.
+
+## Navigation (do not break without explicit ask)
+Primary loop: Today → Garden → Log → Guide. Canonical surface: `/my-garden`.
+No new top-level tabs. Put advanced tools in Guide.
+
+## Read before product / architecture / UX changes
+- docs/PRODUCT_GUARDRAILS.md
+- docs/INFORMATION_ARCHITECTURE.md
+- docs/ROADMAP.md
+- docs/SCHEMA_ALIGNMENT.md
+- docs/BACKEND_PLAN.md
+- docs/GARDEN_APP_RESEARCH.md
+
+## Read before dashboard work
+- app/my-garden/page.tsx
+- components/dashboard/dashboard-client.tsx
+- lib/demo-garden.ts
+- lib/garden-setup/* (onboarding / personalized spaces)
+
+## Data discipline
+- Product term: spaces (indoor + outdoor share one model).
+- Demo-first is OK (localStorage) unless the task explicitly requires Supabase persistence.
+- Do not mix demo, localStorage, legacy Supabase paths, and future schema casually.
+- Target tables: garden_areas, plant_library, plantings, observations, care_tasks.
+
+## Phased feature vision (build in order; do not ship everything at once)
+1. Today engine — deterministic best action + weather context (no chatbot shell).
+2. Spaces + setup wizard — conversational onboarding, personalized spaces.
+3. Log / journal — quick notes, photos, mood, small wins (achievement without gamification cringe).
+4. Guide depth — pest/disease ID, seasonal tips, layout planner (assistive, not autopilot).
+5. AI plant care — suggestions with clear "why", confidence, and safe disclaimers; never default to diagnosis chat.
+
+## Do not without explicit ask
+- Expand auth, RLS, invites, middleware scope.
+- Giant rewrites or parallel data models.
+- AI diagnosis chatbot as the main UI.
+- Enterprise dashboard sprawl.
+
+## Task contract
+Before coding: short plan, files to inspect, files to edit, risks.
+After coding: what changed, why, validation (`npm run verify` or build/lint), deferred items.
+Smallest safe change per phase.
+
+## Validation
+Run `npm run verify` when possible. Sanity-check `/my-garden` and `/setup` at mobile width for UI work.
+"""
+
+# Prefer these skills when relevant (paths are on this machine).
+[[skills.config]]
+path = "C:/Users/hoosi/.cursor/plugins/cache/cursor-public/supabase/release_v0.1.4/skills/supabase"
+enabled = true
+
+[[skills.config]]
+path = "C:/Users/hoosi/.cursor/plugins/cache/cursor-public/vercel/3d9d9cd0fe5d1bdaedb891135a5c45f19190b83f/skills/nextjs"
+enabled = true
+
+[[skills.config]]
+path = "C:/Users/hoosi/.cursor/plugins/cache/cursor-public/vercel/3d9d9cd0fe5d1bdaedb891135a5c45f19190b83f/skills/shadcn"
+enabled = true
+
+[[skills.config]]
+path = "C:/Users/hoosi/.agents/skills/site-audit-mobile-parity"
+enabled = true
+
+[[skills.config]]
+path = "C:/Users/hoosi/.claude/plugins/cache/claude-code-workflows/ui-design/1.0.3/skills/responsive-design"
+enabled = true
+
+[[skills.config]]
+path = "C:/Users/hoosi/.claude/plugins/cache/claude-code-workflows/ui-design/1.0.3/skills/accessibility-compliance"
+enabled = true
+
+[agents.garden-product]
+description = "Product + UX for Momma D's Garden: calm mobile IA, beginner-friendly copy, phased roadmap. Use for IA, onboarding, Today/Garden/Log/Guide, achievement tone, wellness framing."
+config_file = ".codex/agents/garden-product.toml"
+
+[agents.garden-engineer]
+description = "Next.js + Supabase implementation for Momma D's Garden. Smallest safe diffs, demo-first, spaces model, verify builds. Use for app/my-garden, dashboard, lib/garden-setup, auth gates."
+config_file = ".codex/agents/garden-engineer.toml"

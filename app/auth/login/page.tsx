@@ -40,13 +40,28 @@ export default function LoginPage() {
     setLoading(true)
 
     try {
-      const { error: signInError } = await supabase.auth.signInWithPassword({
+      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email,
         password,
       })
 
       if (signInError) {
         setError(signInError.message)
+        return
+      }
+
+      if (signInData.session) {
+        await supabase.auth.setSession({
+          access_token: signInData.session.access_token,
+          refresh_token: signInData.session.refresh_token,
+        })
+      }
+
+      const {
+        data: { session },
+      } = await supabase.auth.getSession()
+      if (!session) {
+        setError('Sign in succeeded, but the session did not start. Please try again.')
         return
       }
 

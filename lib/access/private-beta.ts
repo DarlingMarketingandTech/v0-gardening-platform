@@ -56,12 +56,17 @@ export async function getMyHouseholdMembership(
   }
 }
 
+function firstClaimRow(data: ClaimPrivateBetaRow | ClaimPrivateBetaRow[] | null): ClaimPrivateBetaRow | null {
+  if (!data) return null
+  return Array.isArray(data) ? (data[0] ?? null) : data
+}
+
 export async function claimPrivateBetaHousehold(
   supabase: SupabaseClient,
 ): Promise<ClaimPrivateBetaResult> {
-  const { data, error } = await supabase.rpc('claim_private_beta_household').single()
+  const { data, error } = await supabase.rpc('claim_private_beta_household')
 
-  const row = data as ClaimPrivateBetaRow | null
+  const row = firstClaimRow(data as ClaimPrivateBetaRow | ClaimPrivateBetaRow[] | null)
 
   if (error) {
     return {
@@ -74,12 +79,13 @@ export async function claimPrivateBetaHousehold(
   }
 
   if (!row?.success) {
+    const message = row?.error_message ?? 'Could not claim garden access'
     return {
       success: false,
       householdId: null,
       role: null,
-      notAllowlisted: Boolean(row?.error_message?.toLowerCase().includes('allowlist')),
-      errorMessage: row?.error_message ?? 'Could not claim garden access',
+      notAllowlisted: message.toLowerCase().includes('allowlist'),
+      errorMessage: message,
     }
   }
 

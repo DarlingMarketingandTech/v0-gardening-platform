@@ -1,35 +1,4 @@
-create schema if not exists private;
-
-create table if not exists private.beta_allowlist (
-  email text primary key,
-  display_name text,
-  household_name text,
-  location_label text,
-  city text,
-  state text,
-  country text default 'US',
-  timezone text default 'America/New_York',
-  growing_zone text,
-  notes text,
-  is_enabled boolean not null default true,
-  created_at timestamptz not null default now(),
-  claimed_at timestamptz,
-  claimed_by uuid references auth.users(id),
-  household_id uuid references public.households(id)
-);
-
-create unique index if not exists beta_allowlist_email_lower_idx
-on private.beta_allowlist (lower(email));
-
-alter table private.beta_allowlist enable row level security;
-
-revoke all on schema private from public;
-revoke all on schema private from anon;
-revoke all on schema private from authenticated;
-
-revoke all on table private.beta_allowlist from public;
-revoke all on table private.beta_allowlist from anon;
-revoke all on table private.beta_allowlist from authenticated;
+-- Fix ambiguous household_id in claim_private_beta_household (RETURNS TABLE vs column name).
 
 create or replace function public.claim_private_beta_household()
 returns table (
@@ -76,10 +45,6 @@ begin
     return;
   end if;
 
-  /*
-    Existing household members are already approved.
-    This prevents locking out Jacob or anyone manually added earlier.
-  */
   select
     hm.household_id,
     hm.role::text
@@ -104,9 +69,6 @@ begin
     return;
   end if;
 
-  /*
-    New users must be on the private beta allowlist.
-  */
   select *
   into v_allowlist
   from private.beta_allowlist
@@ -197,29 +159,3 @@ exception
     select false, null::uuid, null::text, sqlerrm::text;
 end;
 $$;
-
-revoke all on function public.claim_private_beta_household() from public;
-revoke execute on function public.claim_private_beta_household() from anon;
-grant execute on function public.claim_private_beta_household() to authenticated;
-
--- Seed: Jacob test account
-insert into private.beta_allowlist (
-  email,
-  display_name,
-  household_name,
-  location_label,
-  timezone
-)
-values (
-  'hoosierdarling@gmail.com',
-  'Jacob Test',
-  'Jacob Test Garden',
-  'Raleigh, NC',
-  'America/New_York'
-)
-on conflict (email) do update set
-  display_name = excluded.display_name,
-  household_name = excluded.household_name,
-  location_label = excluded.location_label,
-  timezone = excluded.timezone,
-  is_enabled = true;

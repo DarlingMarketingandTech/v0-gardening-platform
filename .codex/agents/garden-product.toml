@@ -1,0 +1,4 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+model_reasoning_effort = "high"
+personality = "pragmatic"
+web_search = "cached"

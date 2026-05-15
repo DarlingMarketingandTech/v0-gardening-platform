@@ -1,0 +1,6 @@
+interface:
+  display_name: "Frontend UI Engineering"
+  short_description: "Production-quality UI build and polish"
+  default_prompt: "Use $frontend-ui-engineering to build or refine a user-facing interface to production quality."
+policy:
+  allow_implicit_invocation: true

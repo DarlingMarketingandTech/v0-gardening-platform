@@ -1,4 +1,12 @@
 import type { DemoGardenPlanting, DemoGardenSpace } from '@/lib/demo-garden'
+import {
+  findContainerSpace,
+  findIndoorMoistureSpace,
+  findInGroundSpace,
+  findPollinatorSpace,
+  findTrellisSpace,
+  firstOutdoorSpace,
+} from '@/lib/today-engine/space-heuristics'
 
 export type TodayBriefItemKind =
   | 'water'
@@ -117,7 +125,7 @@ function getWeatherFlags(weather: TodayBriefWeather | null | undefined, date: Da
 }
 
 function containerWaterRule(spaces: DemoGardenSpace[], flags: WeatherFlags): ScoredBriefItem | null {
-  const space = spaces.find((item) => item.id === 'patio-pots')
+  const space = findContainerSpace(spaces)
   if (!space || flags.rainy) return null
 
   const planting = space.plantings.find((item) => item.status === 'ready-soon') ?? space.plantings[0]
@@ -125,8 +133,8 @@ function containerWaterRule(spaces: DemoGardenSpace[], flags: WeatherFlags): Sco
   return {
     id: 'container-water',
     priority: flags.hot && flags.dry ? 100 : flags.dry ? 76 : 55,
-    title: 'Check the patio pots before dinner',
-    body: 'Lift the lightest basil or pepper pot. Water only if it feels light or the top inch is dry.',
+    title: `Check ${space.title} before dinner`,
+    body: 'Lift the lightest pot or tray. Water only if it feels light or the top inch is dry.',
     reason: 'Containers dry out faster than beds, and steady moisture helps herbs and peppers keep growing without stress.',
     kind: 'water',
     spaceTitle: space.title,
@@ -135,7 +143,7 @@ function containerWaterRule(spaces: DemoGardenSpace[], flags: WeatherFlags): Sco
 }
 
 function trellisSupportRule(spaces: DemoGardenSpace[], flags: WeatherFlags): ScoredBriefItem | null {
-  const space = spaces.find((item) => item.id === 'raised-bed-trellis')
+  const space = findTrellisSpace(spaces)
   if (!space) return null
 
   const planting = space.plantings.find((item) => item.status === 'growing') ?? space.plantings[0]
@@ -172,29 +180,34 @@ function readySoonHarvestRule(spaces: DemoGardenSpace[], flags: WeatherFlags): S
 
 function pollinatorBloomRule(spaces: DemoGardenSpace[]): ScoredBriefItem | null {
   const match = findPlanting(spaces, (planting) => planting.status === 'blooming')
-  if (!match) return null
+  const pollinatorSpace = findPollinatorSpace(spaces)
+  if (!match && !pollinatorSpace) return null
+
+  const space = match?.space ?? pollinatorSpace!
 
   return {
     id: 'pollinator-bloom',
     priority: 50,
-    title: 'Deadhead a short stretch of blooms',
-    body: 'Clip a few spent flowers in the pollinator border and leave the fresh blooms for bees.',
+    title: match ? 'Deadhead a short stretch of blooms' : `Give ${space.title} a quick look`,
+    body: match
+      ? 'Clip a few spent flowers and leave the fresh blooms for bees.'
+      : space.weeklyAction,
     reason: 'A small deadheading pass keeps flowers coming without turning the border into a chore.',
     kind: 'bloom',
-    spaceTitle: match.space.title,
-    plantingName: match.planting.name,
+    spaceTitle: match?.space.title ?? space.title,
+    plantingName: match?.planting.name,
   }
 }
 
 function indoorMoistureRule(spaces: DemoGardenSpace[], flags: WeatherFlags): ScoredBriefItem | null {
-  const space = spaces.find((item) => item.id === 'bathroom-fern-corner')
+  const space = findIndoorMoistureSpace(spaces)
   const planting = space?.plantings[0]
   if (!space || !planting) return null
 
   return {
     id: 'indoor-moisture',
     priority: flags.lowIndoorHumidity ? 66 : 44,
-    title: 'Give the fern a fingertip moisture check',
+    title: `Give ${space.title} a fingertip moisture check`,
     body: 'Keep it lightly damp, then pour off any water resting in the saucer.',
     reason: 'Humidity-loving indoor plants want steady moisture, but sitting in stale water can still bother roots.',
     kind: 'indoor',
@@ -204,14 +217,14 @@ function indoorMoistureRule(spaces: DemoGardenSpace[], flags: WeatherFlags): Sco
 }
 
 function bedEdgeTidyRule(spaces: DemoGardenSpace[], flags: WeatherFlags): ScoredBriefItem | null {
-  const space = spaces.find((item) => item.id === 'in-ground-bed')
+  const space = findInGroundSpace(spaces)
   if (!space) return null
 
   return {
     id: 'bed-edge-tidy',
     priority: flags.rainy ? 68 : 38,
-    title: 'Pull the obvious weeds along one bed edge',
-    body: 'Do one slow pass around the in-ground bed and stop there.',
+    title: `Pull obvious weeds along ${space.title}`,
+    body: 'Do one slow pass along the bed edge and stop there.',
     reason: 'A tiny weed pass after soft soil saves bigger work later without making Today feel like a project.',
     kind: 'tidy',
     spaceTitle: space.title,
@@ -219,16 +232,16 @@ function bedEdgeTidyRule(spaces: DemoGardenSpace[], flags: WeatherFlags): Scored
 }
 
 function buildWatchOut(spaces: DemoGardenSpace[], flags: WeatherFlags): TodayBriefItem {
-  const patio = spaces.find((item) => item.id === 'patio-pots')
-  const trellis = spaces.find((item) => item.id === 'raised-bed-trellis')
-  const bed = spaces.find((item) => item.id === 'in-ground-bed')
-  const fern = spaces.find((item) => item.id === 'bathroom-fern-corner')
+  const patio = findContainerSpace(spaces)
+  const trellis = findTrellisSpace(spaces)
+  const bed = findInGroundSpace(spaces)
+  const fern = findIndoorMoistureSpace(spaces)
 
   if (flags.hot && flags.dry && patio) {
     return {
       id: 'watch-hot-pots',
-      title: 'Patio pots can dry fast today',
-      body: 'Concrete, sun, and warm air can dry containers before the beds look thirsty.',
+      title: `${patio.title} can dry fast today`,
+      body: 'Sun and warm air can dry containers before beds look thirsty.',
       reason: patio.watchFor,
       kind: 'water',
       spaceTitle: patio.title,
@@ -280,7 +293,7 @@ function buildWatchOut(spaces: DemoGardenSpace[], flags: WeatherFlags): TodayBri
 function buildMilestone(spaces: DemoGardenSpace[], flags: WeatherFlags): TodayBriefItem {
   const readySoon = findPlanting(spaces, (planting) => planting.status === 'ready-soon')
   const blooming = findPlanting(spaces, (planting) => planting.status === 'blooming')
-  const trellis = spaces.find((item) => item.id === 'raised-bed-trellis')
+  const trellis = findTrellisSpace(spaces)
 
   if (readySoon) {
     const harvestName = readySoon.planting.variety ?? readySoon.planting.name
@@ -329,7 +342,7 @@ function buildMilestone(spaces: DemoGardenSpace[], flags: WeatherFlags): TodayBr
 }
 
 function fallbackAction(spaces: DemoGardenSpace[]): ScoredBriefItem {
-  const firstOutdoor = spaces.find((space) => space.group === 'outdoor') ?? spaces[0]
+  const firstOutdoor = firstOutdoorSpace(spaces) ?? spaces[0]
 
   return {
     id: 'fallback-look-in',

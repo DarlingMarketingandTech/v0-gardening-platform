@@ -1,6 +1,6 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -34,12 +34,16 @@ import {
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import type { Plant } from '@/lib/types'
-import { demoGardenSpaces } from '@/lib/demo-garden'
+import { getGardenSpacesForHousehold } from '@/lib/garden-setup/store'
 import {
   buildTodayBrief,
   type TodayBriefItem,
   type TodayBriefItemKind,
-} from '@/lib/today-brief'
+} from '@/lib/today-engine'
+import { GuideArticlesPanel } from '@/components/guide/guide-articles-panel'
+import { PlacementHelperPanel } from '@/components/guide/placement-helper-panel'
+import { PlantIdentifyPanel } from '@/components/guide/plant-identify-panel'
+import { KnowledgeSnippetsPanel } from '@/components/guide/knowledge-snippets-panel'
 
 interface DashboardClientProps {
   plants: Plant[]
@@ -60,10 +64,18 @@ const briefIcons: Record<TodayBriefItemKind, LucideIcon> = {
 
 export function DashboardClient({ plants, householdId = null }: DashboardClientProps) {
   const [activeTab, setActiveTab] = useState<MainTab>('today')
+  const [spacesSource, setSpacesSource] = useState(() =>
+    getGardenSpacesForHousehold(householdId),
+  )
   const weatherState = useGardenWeather(null, null)
+
+  useEffect(() => {
+    setSpacesSource(getGardenSpacesForHousehold(householdId))
+  }, [householdId])
+
   const todayBrief = useMemo(
-    () => buildTodayBrief({ spaces: demoGardenSpaces, weather: weatherState.weather }),
-    [weatherState.weather]
+    () => buildTodayBrief({ spaces: spacesSource.spaces, weather: weatherState.weather }),
+    [spacesSource.spaces, weatherState.weather],
   )
 
   return (
@@ -226,12 +238,17 @@ export function DashboardClient({ plants, householdId = null }: DashboardClientP
 
           {/* GARDEN */}
           <TabsContent value="garden" className="mt-6 space-y-6">
-            <GardenSpaces />
+            <GardenSpaces
+              spaces={spacesSource.spaces}
+              isPersonalized={spacesSource.isPersonalized}
+              locationLabel={spacesSource.profile?.locationLabel}
+              householdId={householdId}
+            />
           </TabsContent>
 
           {/* LOG */}
           <TabsContent value="log" className="mt-6 space-y-6">
-            <GardenLog />
+            <GardenLog householdId={householdId} />
           </TabsContent>
 
           {/* GUIDE */}
@@ -244,6 +261,11 @@ export function DashboardClient({ plants, householdId = null }: DashboardClientP
                 </p>
               </CardHeader>
             </Card>
+
+            <PlantIdentifyPanel />
+            <PlacementHelperPanel spaces={spacesSource.spaces} />
+            <GuideArticlesPanel />
+            <KnowledgeSnippetsPanel />
 
             <details className="rounded-xl border bg-background p-4">
               <summary className="cursor-pointer font-semibold flex items-center gap-2">

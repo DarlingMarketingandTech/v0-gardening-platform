@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { DashboardClient } from '@/components/dashboard/dashboard-client'
+import { MyGardenSetupGate } from '@/components/my-garden/my-garden-setup-gate'
 import { DEMO_HOUSEHOLD_ID, demoPlants } from '@/lib/demo-garden'
 import { hasPublicSupabaseEnv } from '@/lib/env/supabase-public'
 import { createClient } from '@/lib/supabase/server'
@@ -30,5 +31,9 @@ export default async function MyGardenPage() {
     }
   }
 
-  return <DashboardClient plants={demoPlants} householdId={householdId} />
+  return (
+    <MyGardenSetupGate householdId={householdId}>
+      <DashboardClient plants={demoPlants} householdId={householdId} />
+    </MyGardenSetupGate>
+  )
 }

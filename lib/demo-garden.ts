@@ -33,7 +33,8 @@ export interface DemoGardenPlanting {
 }
 
 export interface DemoGardenSpace {
-  id: DemoGardenSpaceId
+  /** Demo spaces use fixed ids; setup wizard uses `user-outdoor-*` / `user-indoor-*`. */
+  id: DemoGardenSpaceId | string
   group: DemoGardenSpaceGroup
   title: string
   description: string

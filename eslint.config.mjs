@@ -24,6 +24,7 @@ export default tseslint.config(
       'next-env.d.ts',
       'public/sw.js',
       '*.config.*',
+      'tools/mcp/**',
     ],
   },
 )

@@ -79,7 +79,18 @@ const defaultEntries: LogEntry[] = [
   }
 ]
 
-export function GardenLog() {
+const LOG_STORAGE_PREFIX = 'momma-garden-log-v1'
+
+function logStorageKey(householdId: string | null | undefined) {
+  return `${LOG_STORAGE_PREFIX}:${householdId ?? 'demo'}`
+}
+
+interface GardenLogProps {
+  householdId?: string | null
+}
+
+export function GardenLog({ householdId = null }: GardenLogProps) {
+  const storageKey = logStorageKey(householdId)
   const [entries, setEntries] = useState<LogEntry[]>(defaultEntries)
   const [isAddingEntry, setIsAddingEntry] = useState(false)
   const [newNote, setNewNote] = useState('')
@@ -88,22 +99,22 @@ export function GardenLog() {
   const [hasPestAlert, setHasPestAlert] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  // Stored in localStorage for the demo, but this represents real log data that should map to observations.
   useEffect(() => {
-    const saved = localStorage.getItem('gardenLog')
+    const saved = localStorage.getItem(storageKey)
     if (saved) {
       try {
         setEntries(JSON.parse(saved))
       } catch {
         setEntries(defaultEntries)
       }
+    } else {
+      setEntries(defaultEntries)
     }
-  }, [])
+  }, [storageKey])
 
-  // Keep current demo behavior unchanged during the audit.
   useEffect(() => {
-    localStorage.setItem('gardenLog', JSON.stringify(entries))
-  }, [entries])
+    localStorage.setItem(storageKey, JSON.stringify(entries))
+  }, [entries, storageKey])
 
   const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files

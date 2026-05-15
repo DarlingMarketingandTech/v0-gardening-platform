@@ -60,6 +60,11 @@ export default function SignUpPage() {
         return
       }
 
+      await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      })
+
       const claim = await claimPrivateBetaHousehold(supabase)
       if (!claim.success && !claim.notAllowlisted && claim.errorMessage) {
         setError(claim.errorMessage)

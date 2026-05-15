@@ -1,0 +1,18 @@
+{
+  "mcpServers": {
+    "plantnet-dev": {
+      "command": "node",
+      "args": ["tools/mcp/plantnet/index.mjs"],
+      "env": {
+        "PLANTNET_API_KEY": "${PLANTNET_API_KEY}"
+      }
+    },
+    "trefle-dev": {
+      "command": "node",
+      "args": ["tools/mcp/trefle/index.mjs"],
+      "env": {
+        "TREFLE_TOKEN": "${TREFLE_TOKEN}"
+      }
+    }
+  }
+}
