@@ -1,7 +1,7 @@
 -- Phase 9B: plant_library columns needed for Heydenberk reference upserts + unique (source, source_key).
 -- Idempotent; intended for preview/dev branches first. Does not change RLS policies.
 -- Does not alter existing plant_library column definitions beyond ADD COLUMN IF NOT EXISTS.
--- Runs after 2026051600_garden_core_tables_if_missing.sql (table must exist).
+-- Runs after 20260516000000_garden_core_tables_if_missing.sql (table must exist).
 
 alter table public.plant_library add column if not exists source text;
 alter table public.plant_library add column if not exists source_key text;

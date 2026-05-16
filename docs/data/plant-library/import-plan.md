@@ -7,30 +7,31 @@ This document describes how Momma D's Garden will bootstrap `plant_library` from
 **Problem**
 
 - Preview databases replay only what is in `supabase/migrations/`. Several migrations assumed core `public` tables and enums already existed because they had been created earlier on main **outside** this migration stack.
-- In particular, `2026051500_api_grants_and_access_requests.sql` issued `GRANT` on `public.profiles`, `public.households`, and other tables before those relations existed on an empty branch, which aborted the chain (`relation "public.profiles" does not exist`).
+- In particular, `20260515000000_api_grants_and_access_requests.sql` issued `GRANT` on `public.profiles`, `public.households`, and other tables before those relations existed on an empty branch, which aborted the chain (`relation "public.profiles" does not exist`).
 - Production main was fine because historical DDL predated or sidestepped the repo order; preview branches start empty, so the folder was not greenfield-safe.
 
 **Fix (repo-only, no seed data)**
 
 - New idempotent migration `supabase/migrations/20260511080000_public_base_schema_if_missing.sql` runs **before** `20260511120000_fix_household_rls_and_invite_rpcs.sql` (lexicographic order). It creates missing enum types and base tables (`profiles`, `households`, `household_members`, `family_invites`, `plant_library`, `garden_areas`, `plantings`, `observations`, `care_tasks`) plus indexes and RLS enablement so later migrations can attach policies and grants safely.
-- The timestamp is intentionally **before** `20260511120000`, not only before `2026051500`, because the household RLS migration alters those tables on the first statement and would fail on an empty database if base DDL were inserted only immediately before the grant migration.
-- `2026051500_api_grants_and_access_requests.sql` now grants table privileges only when each relation exists, so a partial replay does not fail on missing tables.
+- The timestamp is intentionally **before** `20260511120000`, not only before `20260515000000`, because the household RLS migration alters those tables on the first statement and would fail on an empty database if base DDL were inserted only immediately before the grant migration.
+- `20260515000000_api_grants_and_access_requests.sql` now grants table privileges only when each relation exists, so a partial replay does not fail on missing tables.
+- Migration filenames use standard **14-digit** Supabase timestamps (`YYYYMMDDHHmmss`); five files were renamed from short prefixes (`2026051500`, `2026051502`, …) via `git mv` so lexicographic replay order matches intent.
 - **No application data** is written in this phase; no change to product UI; RLS policy definitions in later files are unchanged. `20260516010000_plant_library_source_key_unique.sql` remains the Phase 9B unique index migration.
 
 **Table / enum dependency order (which migrations assume what)**
 
 | Assumption | First touched in repo (approx.) | Notes |
 | --- | --- | --- |
-| `public.household_role` enum (used as RPC arg type) | `2026051500_api_grants_and_access_requests.sql` | Enum must exist before `approve_access_request`; base migration creates it with values compatible with text role checks (`owner`, `admin`, `member`, `editor`, `viewer`). |
-| `public.profiles`, `public.households`, `public.household_members`, `public.family_invites`, `public.garden_areas`, `public.plantings`, `public.observations`, `public.care_tasks`, `public.plant_library` | `20260511120000_fix_household_rls_and_invite_rpcs.sql` (policies), `2026051500` (grants + `access_requests` FKs), `2026051502` / `2026051504` (RPCs inserting into these tables), `20260511140000_family_access_codes.sql` (`households`, `household_members`) | Base migration creates shells + columns so `ALTER` / `GRANT` / RPC bodies resolve. |
-| `public.access_requests` | `2026051500` | Still created in `2026051500` (not in base); requires `households` to exist for FK (provided by base). |
-| `private.beta_allowlist` + `public.claim_private_beta_household` | `2026051502`, `2026051503`, `2026051504` | Depends on `households`, `household_members`, `profiles`. |
-| Core garden tables (alternate minimal shape) | `2026051600_garden_core_tables_if_missing.sql` | Uses `CREATE TABLE IF NOT EXISTS`; no-ops when base migration already created richer tables. |
-| `plant_library` Heydenberk columns + unique `(source, source_key)` | `20260516010000_plant_library_source_key_unique.sql` | Runs after `2026051600`; idempotent `ADD COLUMN IF NOT EXISTS` + unique index. |
+| `public.household_role` enum (used as RPC arg type) | `20260515000000_api_grants_and_access_requests.sql` | Enum must exist before `approve_access_request`; base migration creates it with values compatible with text role checks (`owner`, `admin`, `member`, `editor`, `viewer`). |
+| `public.profiles`, `public.households`, `public.household_members`, `public.family_invites`, `public.garden_areas`, `public.plantings`, `public.observations`, `public.care_tasks`, `public.plant_library` | `20260511120000_fix_household_rls_and_invite_rpcs.sql` (policies), `20260515000000` (grants + `access_requests` FKs), `20260515020000` / `20260515040000` (RPCs inserting into these tables), `20260511140000_family_access_codes.sql` (`households`, `household_members`) | Base migration creates shells + columns so `ALTER` / `GRANT` / RPC bodies resolve. |
+| `public.access_requests` | `20260515000000` | Still created in `20260515000000` (not in base); requires `households` to exist for FK (provided by base). |
+| `private.beta_allowlist` + `public.claim_private_beta_household` | `20260515020000`, `20260515030000`, `20260515040000` | Depends on `households`, `household_members`, `profiles`. |
+| Core garden tables (alternate minimal shape) | `20260516000000_garden_core_tables_if_missing.sql` | Uses `CREATE TABLE IF NOT EXISTS`; no-ops when base migration already created richer tables. |
+| `plant_library` Heydenberk columns + unique `(source, source_key)` | `20260516010000_plant_library_source_key_unique.sql` | Runs after `20260516000000`; idempotent `ADD COLUMN IF NOT EXISTS` + unique index. |
 
 **Enum types created in base (idempotent)**
 
-- `household_role`, `space_kind`, `planting_status`, `observation_kind`, `task_priority`, `task_status`, `access_request_status` (the last is also ensured by `2026051500` with duplicate-safe `DO` blocks).
+- `household_role`, `space_kind`, `planting_status`, `observation_kind`, `task_priority`, `task_status`, `access_request_status` (the last is also ensured by `20260515000000` with duplicate-safe `DO` blocks).
 
 ## Phase 9B — Preview-branch `plant_library` seed (Heydenberk)
 
