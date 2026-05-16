@@ -51,7 +51,7 @@ export function PlantIssueGuide() {
         title={copy.issueGuide.title}
         description={copy.issueGuide.description}
       >
-        <p className="text-xs leading-relaxed text-[var(--garden-text-muted)]">{copy.issueGuide.pestLookupHint}</p>
+        <p className="text-xs leading-relaxed text-(--garden-text-muted)">{copy.issueGuide.pestLookupHint}</p>
 
         <div className="space-y-3">
           <Input
@@ -60,14 +60,14 @@ export function PlantIssueGuide() {
             onChange={(e) => setQuery(e.target.value)}
             placeholder={copy.issueGuide.searchPlaceholder}
             aria-label={copy.issueGuide.searchPlaceholder}
-            className="bg-[var(--garden-surface)]"
+            className="bg-(--garden-surface)"
           />
 
           <div className="space-y-2">
             {filtered.length === 0 ? (
-              <div className="rounded-[length:var(--garden-radius-card)] border border-dashed border-[var(--garden-border)] bg-[var(--garden-surface-muted)] px-4 py-6 text-center">
-                <p className="text-sm font-medium text-[var(--garden-text)]">{copy.issueGuide.emptyTitle}</p>
-                <p className="mt-1 text-xs leading-relaxed text-[var(--garden-text-muted)]">{copy.issueGuide.emptyBody}</p>
+              <div className="rounded-(--garden-radius-card) border border-dashed border-(--garden-border) bg-(--garden-surface-muted) px-4 py-6 text-center">
+                <p className="text-sm font-medium text-(--garden-text)">{copy.issueGuide.emptyTitle}</p>
+                <p className="mt-1 text-xs leading-relaxed text-(--garden-text-muted)">{copy.issueGuide.emptyBody}</p>
               </div>
             ) : (
               filtered.map((entry) => (
@@ -82,9 +82,9 @@ export function PlantIssueGuide() {
           </div>
         </div>
 
-        <div className="mt-8 space-y-3 border-t border-[var(--garden-border)] pt-6">
+        <div className="mt-8 space-y-3 border-t border-(--garden-border) pt-6">
           <p className="text-xs font-medium tracking-wide text-primary uppercase">{copy.issueGuide.sampleEyebrow}</p>
-          <p className="text-xs leading-relaxed text-[var(--garden-text-muted)]">{copy.issueGuide.sampleIntro}</p>
+          <p className="text-xs leading-relaxed text-(--garden-text-muted)">{copy.issueGuide.sampleIntro}</p>
           <CareResultCard result={DEMO_IDENTITY_RESULT} locale={locale} />
         </div>
       </SectionCard>

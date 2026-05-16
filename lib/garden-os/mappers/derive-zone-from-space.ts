@@ -3,19 +3,26 @@ import type { GardenZoneCondition } from '@/lib/garden-os/types'
 
 const SUN_LEVEL_LABELS: Record<string, string> = {
   low: 'Mostly gentle light',
+  'bright-indirect': 'Mostly bright indirect light',
   mid: 'Mostly bright light',
   high: 'Mostly strong light',
 }
 
-/** Parses setup wizard descriptions from buildSpacesFromProfile. */
+/** Parses setup wizard descriptions from buildSpacesFromProfile when `setupHints` is absent. */
 export function inferLightExposureLabel(space: DemoGardenSpace): string {
+  const hints = space.setupHints
+  if (hints?.lightProfile) {
+    const label = SUN_LEVEL_LABELS[hints.lightProfile] ?? hints.lightProfile
+    return space.group === 'outdoor' ? `${label} · outdoor` : `${label} · indoor`
+  }
+
   const desc = space.description
-  const sunMatch = desc.match(/Sun is mostly (low|mid|high)/i)
+  const sunMatch = desc.match(/Sun is mostly (low|bright-indirect|mid|high)/i)
   if (sunMatch?.[1]) {
     const key = sunMatch[1].toLowerCase()
-    return space.group === 'outdoor' ? `${SUN_LEVEL_LABELS[key]} · outdoor` : SUN_LEVEL_LABELS[key] ?? 'Outdoor light'
+    return space.group === 'outdoor' ? `${SUN_LEVEL_LABELS[key] ?? key} · outdoor` : SUN_LEVEL_LABELS[key] ?? 'Outdoor light'
   }
-  const lightMatch = desc.match(/Light is mostly (low|mid|high)/i)
+  const lightMatch = desc.match(/Light is mostly (low|bright-indirect|mid|high)/i)
   if (lightMatch?.[1]) {
     const key = lightMatch[1].toLowerCase()
     return `${SUN_LEVEL_LABELS[key]} · indoor`
@@ -40,6 +47,10 @@ export function areaTypeLabelFromGroup(group: DemoGardenSpace['group']): string 
   return group === 'outdoor' ? 'Outdoor zone' : 'Indoor zone'
 }
 
+export function areaTypeLabelForSpace(space: DemoGardenSpace): string {
+  return space.setupHints?.areaTypeLabel ?? areaTypeLabelFromGroup(space.group)
+}
+
 export function deriveZoneCondition(space: DemoGardenSpace): GardenZoneCondition {
   const combined = `${space.watchFor} ${space.weeklyAction} ${space.title} ${space.description}`.toLowerCase()
   const id = String(space.id).toLowerCase()
@@ -56,7 +67,9 @@ export function deriveZoneCondition(space: DemoGardenSpace): GardenZoneCondition
     return 'critical'
   }
 
+  const driesFast = space.setupHints?.forecast.driesFast === true
   const containerCue =
+    driesFast ||
     /patio|pot|container|kitchen-window/i.test(id) ||
     /container|pots|drying out|dry soil|water at the base|soak until water/i.test(combined)
 

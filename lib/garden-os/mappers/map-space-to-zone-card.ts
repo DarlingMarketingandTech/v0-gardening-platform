@@ -1,6 +1,6 @@
 import type { DemoGardenPlanting, DemoGardenSpace } from '@/lib/demo-garden'
 import {
-  areaTypeLabelFromGroup,
+  areaTypeLabelForSpace,
   computeOpenTaskCount,
   conditionLabelFor,
   deriveZoneCondition,
@@ -31,7 +31,7 @@ export function mapSpaceToZoneCard(space: DemoGardenSpace): GardenZoneCard {
       name: planting.name,
       statusLabel: statusLabels[planting.status],
     })),
-    areaTypeLabel: areaTypeLabelFromGroup(space.group),
+    areaTypeLabel: areaTypeLabelForSpace(space),
     lightExposureLabel: inferLightExposureLabel(space),
     condition,
     conditionLabel: conditionLabelFor(condition),

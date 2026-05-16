@@ -130,6 +130,66 @@ export interface PlanCropWindow {
   description: string
 }
 
+export type PlanGrowingMode = 'indoor' | 'outdoor' | 'mixed'
+
+/** How strongly Plan can tie copy to your spaces (no weather / DB in Phase 8A). */
+export type PlanConfidence = 'high' | 'medium' | 'starter'
+
+export interface PlanSeasonSummary {
+  /** Short eyebrow, e.g. "May · Spring rhythm" */
+  seasonEyebrow: string
+  /** Main line, e.g. "Spring planning mode" */
+  headline: string
+  monthName: string
+  locationLabel: string | null
+  growingMode: PlanGrowingMode
+  /** Plain language, e.g. "Indoor & outdoor" */
+  growingModeLabel: string
+  nextFocus: string
+  confidence: PlanConfidence
+  /** Supporting paragraph under the hero */
+  explanation: string
+  /** 0–100 year rhythm for a soft progress meter (no weather). */
+  rhythmPercent: number
+}
+
+export interface PlanOpportunity {
+  id: string
+  title: string
+  whyItFits: string
+  bestSpaceName: string | null
+  bestSpaceId: string | null
+  timingLabel: string
+  confidence: PlanConfidence
+}
+
+export interface PlanSpaceFit {
+  spaceId: string
+  spaceTitle: string
+  group: 'indoor' | 'outdoor'
+  areaTypeLabel: string
+  bestFor: string
+  watchFor: string
+  lightExposureLabel: string
+  planningSuggestion: string
+}
+
+export interface PlanTimelineRow {
+  id: string
+  windowLabel: string
+  recommendedAction: string
+  spaceTypeHint: string
+  whyNow: string
+  confidence: PlanConfidence
+}
+
+export interface PlanCompanionHint {
+  id: string
+  title: string
+  body: string
+  tone: 'pairing' | 'spacing' | 'water' | 'pollinator'
+}
+
 export interface PlanViewModel {
   seasonLabel: string
   headline: string
@@ -137,4 +197,12 @@ export interface PlanViewModel {
   timelineSteps: PlanTimelineStep[]
   cropWindows: PlanCropWindow[]
   footerNote: string
+  /** Phase 8A — season + growing context from date + spaces (always built). */
+  seasonSummary: PlanSeasonSummary
+  opportunities: PlanOpportunity[]
+  spaceFits: PlanSpaceFit[]
+  timelineRows: PlanTimelineRow[]
+  companionHints: PlanCompanionHint[]
+  /** True when most spaces carry `setupHints` from garden setup. */
+  hasRichSpaceMetadata: boolean
 }

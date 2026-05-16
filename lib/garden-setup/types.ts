@@ -1,14 +1,16 @@
 import type { DemoGardenSpace } from '@/lib/demo-garden'
 
 export type GardenSkillLevel = 'beginner' | 'comfortable' | 'confident'
-export type SunLevel = 'low' | 'mid' | 'high'
+/** Light / sun intensity saved on each space (localStorage profile). */
+export type SunLevel = 'low' | 'bright-indirect' | 'mid' | 'high'
 export type NotifyFrequency = 'daily' | 'important' | 'weekly'
 export type NotifyChannel = 'email' | 'sms' | 'app'
 
 export interface SetupSpaceDraft {
   id: string
   title: string
-  templateId: string
+  /** If missing on older saved profiles, `build-spaces` infers from `id`. */
+  templateId?: string
 }
 
 export interface GardenSetupProfile {

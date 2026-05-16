@@ -29,7 +29,7 @@ export function PlantIssueCard({ entry, copy, onOpen, className }: PlantIssueCar
       type="button"
       onClick={onOpen}
       className={cn(
-        'group w-full rounded-[length:var(--garden-radius-card)] text-left transition-transform',
+        'group w-full rounded-(--garden-radius-card) text-left transition-transform',
         'focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50',
         'active:scale-[0.99]',
         className,
@@ -39,17 +39,17 @@ export function PlantIssueCard({ entry, copy, onOpen, className }: PlantIssueCar
         variant="muted"
         padding="sm"
         radius="lg"
-        className="border border-[var(--garden-border)] hover:border-primary/25 hover:bg-[var(--garden-surface-elevated)]/60"
+        className="border border-(--garden-border) hover:border-primary/25 hover:bg-(--garden-surface-elevated)/60"
       >
         <div className="flex items-start gap-3">
           <div className="min-w-0 flex-1 space-y-1">
             <div className="flex flex-wrap items-center gap-2">
-              <p className="text-sm font-semibold text-[var(--garden-text)]">{entry.name}</p>
+              <p className="text-sm font-semibold text-(--garden-text)">{entry.name}</p>
               <StateBadge tone={typeTone(entry.type)} size="sm">
                 {typeLabel}
               </StateBadge>
             </div>
-            <p className="line-clamp-2 text-xs leading-relaxed text-[var(--garden-text-muted)]">{entry.beginnerSummary}</p>
+            <p className="line-clamp-2 text-xs leading-relaxed text-(--garden-text-muted)">{entry.beginnerSummary}</p>
           </div>
           <span className="flex shrink-0 items-center gap-1 text-xs font-medium text-primary">
             <span className="hidden sm:inline">{copy.issueGuide.openDetails}</span>

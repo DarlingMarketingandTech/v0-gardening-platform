@@ -75,7 +75,7 @@ No Supabase migrations, no reference repo imports, no remote Figma asset URLs, n
 | `TodayWeatherBrief` | `headline`, `summary`, `forecastImpact`, `chips`, `spaceChecks`. |
 | `TodayInsightCard` / `TodayInsightsRowModel` | Three insight cards (watch / progress / upcoming). |
 | `TodayViewModel` | Adds **`weatherBrief`** and **`insights`** (existing `brief`, `greeting`, `weatherState` unchanged in spirit). |
-| `map-today-weather-brief.ts` | Builds `TodayWeatherBrief` + `buildTodayInsightsRow`; uses `derive-zone-from-space` for condition labels and open tasks. |
+| `map-today-weather-brief.ts` | Builds `TodayWeatherBrief` + `buildTodayInsightsRow`; uses `derive-zone-from-space` for condition labels and open tasks. **Phase 7B:** per-space impact/recommendation uses `DemoGardenSpace.setupHints` when present (template + forecast sensitivity) so indoor/outdoor advice stays separated; demo spaces keep regex + flag heuristics. |
 | `map-brief-to-today-view-model.ts` | Assembles brief, weather brief, and insights in one pass. |
 
 `assembleTodayViewModel` / `getTodayViewModel` / `useHydratedTodayViewModel` behavior: **unchanged** aside from richer `TodayViewModel`; client reassembly on localStorage space changes still passes `weatherState` through.
@@ -85,7 +85,7 @@ No Supabase migrations, no reference repo imports, no remote Figma asset URLs, n
 ## Manual QA
 
 - [ ] `/my-garden/today`: header → weather accordion (default **open**) → More for Today → Insights → Quick capture.
-- [ ] Demo user: weather loads or graceful empty state; **Demo** badge on accordion when `location.source === 'demo'`.
+- [ ] **Phase 7B (setup spaces):** With a completed setup profile, space rows use template-specific lines (patio vs kitchen vs greenhouse vs beds); no indoor frost copy; no outdoor “rotate toward the window” copy.
 - [ ] Personalized household: change spaces in Garden; return to Today — space rows and brief update (hydration).
 - [ ] Collapse accordion: summary still shows headline + summary; expand shows full forecast + spaces.
 - [ ] Insights **Watch out** does not repeat patio/rain/wind copy already shown in space rows (spot-check hot + dry + patio).

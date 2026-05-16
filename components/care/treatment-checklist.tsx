@@ -29,12 +29,12 @@ export function TreatmentChecklist({ steps, locale, className }: TreatmentCheckl
   return (
     <div className={cn('space-y-3', className)}>
       <div>
-        <p id={headingId} className="text-sm font-semibold text-[var(--garden-text)]">
+        <p id={headingId} className="text-sm font-semibold text-(--garden-text)">
           {copy.sections.treatmentChecklist}
         </p>
-        <p className="mt-1 text-xs leading-relaxed text-[var(--garden-text-muted)]">{copy.sections.checklistHint}</p>
+        <p className="mt-1 text-xs leading-relaxed text-(--garden-text-muted)">{copy.sections.checklistHint}</p>
       </div>
-      <AppSurface variant="muted" padding="sm" radius="lg" className="border border-[var(--garden-border)]">
+      <AppSurface variant="muted" padding="sm" radius="lg" className="border border-(--garden-border)">
         <ul className="space-y-2" role="group" aria-labelledby={headingId}>
           {steps.map((step, index) => {
             const id = `care-step-${index}`
@@ -44,7 +44,7 @@ export function TreatmentChecklist({ steps, locale, className }: TreatmentCheckl
                 <label
                   className={cn(
                     'flex cursor-pointer items-start gap-3 rounded-lg p-2 transition-colors',
-                    'hover:bg-[var(--garden-surface-elevated)]/80',
+                    'hover:bg-(--garden-surface-elevated)/80',
                     checked && 'opacity-80',
                   )}
                 >
@@ -53,14 +53,14 @@ export function TreatmentChecklist({ steps, locale, className }: TreatmentCheckl
                     checked={checked}
                     onChange={() => toggle(id)}
                     className={cn(
-                      'mt-1 size-4 shrink-0 rounded border-[var(--garden-border)]',
-                      'text-[var(--garden-primary)] focus-visible:ring-2 focus-visible:ring-ring/40',
+                      'mt-1 size-4 shrink-0 rounded border-(--garden-border)',
+                      'text-(--garden-primary) focus-visible:ring-2 focus-visible:ring-ring/40',
                     )}
                   />
                   <span
                     className={cn(
-                      'text-sm leading-relaxed text-[var(--garden-text)]',
-                      checked && 'line-through decoration-[var(--garden-text-muted)]',
+                      'text-sm leading-relaxed text-(--garden-text)',
+                      checked && 'line-through decoration-(--garden-text-muted)',
                     )}
                   >
                     {step}

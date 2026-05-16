@@ -10,7 +10,7 @@ import type {
 } from '@/lib/garden-os/types'
 import type { TodayBrief } from '@/lib/today-brief'
 import {
-  areaTypeLabelFromGroup,
+  areaTypeLabelForSpace,
   computeOpenTaskCount,
   conditionLabelFor,
   deriveZoneCondition,
@@ -57,11 +57,12 @@ function getFlagsFromWeather(weather: GardenWeatherData | null): WeatherFlags {
   }
 }
 
-function isContainerSpace(space: DemoGardenSpace): boolean {
+function isOutdoorPotStyleSpace(space: DemoGardenSpace): boolean {
+  if (space.setupHints?.forecast.driesFast) return space.group === 'outdoor'
+  if (space.group !== 'outdoor') return false
   const id = String(space.id).toLowerCase()
-  if (/kitchen-window|windowsill|shelf/i.test(id)) return true
   return (
-    space.group === 'outdoor' && (/patio|pot|container/i.test(id) || /patio|pots/i.test(space.title))
+    /patio|pot|container|balcony|deck/i.test(id) || /patio|pots|balcony|container|deck/i.test(space.title)
   )
 }
 
@@ -70,6 +71,10 @@ function isTrellisSpace(space: DemoGardenSpace): boolean {
 }
 
 function isRaisedOrInGround(space: DemoGardenSpace): boolean {
+  if (space.setupHints?.forecast.rainExposed && space.group === 'outdoor') {
+    const t = space.setupHints.templateId
+    return t === 'raised' || t === 'backyard' || t === 'inground' || t === 'pollinator'
+  }
   const id = String(space.id).toLowerCase()
   return space.group === 'outdoor' && (/in-ground|raised/.test(id) || /raised bed|in-ground/i.test(space.title))
 }
@@ -81,7 +86,7 @@ function mapZoneToForecastTone(
 ): TodayForecastSpaceTone {
   if (zone === 'needs_water') return 'water'
   if (zone === 'critical' || zone === 'attention') return 'attention'
-  if (space.group === 'outdoor' && flags.hot && flags.dry && isContainerSpace(space)) return 'water'
+  if (space.group === 'outdoor' && flags.hot && flags.dry && isOutdoorPotStyleSpace(space)) return 'water'
   if (space.group === 'outdoor' && flags.windy && isTrellisSpace(space)) return 'watch'
   return 'stable'
 }
@@ -89,68 +94,175 @@ function mapZoneToForecastTone(
 function buildImpactAndRecommendation(
   space: DemoGardenSpace,
   flags: WeatherFlags,
+  hasForecastPayload: boolean,
 ): { impact: string; recommendation: string } {
+  const hints = space.setupHints
+  const templateId = hints?.templateId
+  const f = hints?.forecast
+
   if (space.group === 'indoor') {
+    if (!hasForecastPayload) {
+      return {
+        impact: 'Home rhythm',
+        recommendation:
+          hints?.beginnerRecommendation ??
+          'Houseplants keep a steadier pace than the weather — one calm check goes a long way.',
+      }
+    }
     if (flags.lowIndoorHumidity) {
       return {
         impact: 'Dry indoor air',
-        recommendation: 'Houseplants may lose moisture a little faster — check soil with a fingertip.',
+        recommendation: 'Misting helps leaves a little, but soil still wins — check pots with a fingertip.',
+      }
+    }
+    if (templateId === 'kitchen') {
+      return {
+        impact: 'Protected indoors',
+        recommendation: 'Protected indoors. Rotate if the leaves lean toward the light.',
+      }
+    }
+    if (templateId === 'living') {
+      return {
+        impact: 'Protected indoors',
+        recommendation: 'Back from the window, soil can surprise you — lift pots to feel their weight.',
+      }
+    }
+    if (templateId === 'bath') {
+      return {
+        impact: 'Humid room air',
+        recommendation: 'Humidity helps foliage — still confirm soil is not staying soggy.',
+      }
+    }
+    if (templateId === 'bedroom') {
+      return {
+        impact: 'Protected indoors',
+        recommendation: 'Gentler light means slower drying — let soil go slightly dry between drinks.',
       }
     }
     return {
       impact: 'Protected indoors',
-      recommendation: 'Kitchen herbs are protected indoors.',
+      recommendation:
+        hints?.beginnerRecommendation ??
+        'Weather outside is a backdrop — your pots still want a calm, regular eye.',
     }
   }
 
-  const container = isContainerSpace(space)
-  const trellis = isTrellisSpace(space)
+  // Outdoor
+  if (!hasForecastPayload) {
+    return {
+      impact: 'Outdoor rhythm',
+      recommendation:
+        hints?.beginnerRecommendation ??
+        'When forecast connects again, we will match rain, heat, and wind to this spot.',
+    }
+  }
 
   if (flags.cold) {
+    if (templateId === 'greenhouse') {
+      return {
+        impact: 'Cool outside',
+        recommendation:
+          'The structure helps, but corners can still dip — tuck a cloth over the tenderest trays if needed.',
+      }
+    }
+    if (f?.frostSensitive) {
+      return {
+        impact: 'Cool spell',
+        recommendation: 'Tender outdoor plants may need a cover or a closer look on cold mornings.',
+      }
+    }
+    if (!hints) {
+      return {
+        impact: 'Chilly spell',
+        recommendation: 'Watch tender outdoor plants if overnight cold is in play.',
+      }
+    }
     return {
-      impact: 'Chilly spell',
-      recommendation: 'Watch tender outdoor plants if overnight cold is in play.',
+      impact: 'Cool outside',
+      recommendation: 'This spot is a bit more sheltered — still worth a glance at anything newly planted.',
     }
   }
 
-  if (flags.rainy && !container) {
+  if (flags.rainy && f?.rainExposed && templateId !== 'greenhouse') {
+    return {
+      impact: 'Rain in the picture',
+      recommendation: 'Rain may cover watering. Check only if the top inch is dry.',
+    }
+  }
+
+  if (flags.rainy && !isOutdoorPotStyleSpace(space)) {
     return {
       impact: 'Rain in the picture',
       recommendation: 'Skip watering if rain arrives later.',
     }
   }
 
-  if (flags.hot && flags.dry && container) {
+  if (flags.hot && flags.dry && (f?.driesFast || isOutdoorPotStyleSpace(space))) {
+    if (templateId === 'balcony' || /balcony/i.test(space.title)) {
+      return {
+        impact: 'Wind and sun',
+        recommendation: 'Wind and sun can dry containers quickly. Check soil before dinner.',
+      }
+    }
     return {
       impact: 'Heat and dry air',
-      recommendation: 'Patio pots may dry faster today.',
+      recommendation: 'Pots can dry faster today. Check soil before dinner.',
     }
   }
 
-  if (flags.windy && trellis) {
+  if (templateId === 'greenhouse' && flags.hot) {
+    return {
+      impact: 'Warm greenhouse air',
+      recommendation: 'Warm enclosed air can build up. Vent if it feels stuffy.',
+    }
+  }
+
+  if (flags.windy && (f?.driesFast || isOutdoorPotStyleSpace(space))) {
+    return {
+      impact: 'Breezy',
+      recommendation: 'Wind pulls moisture from leaves and soil surfaces — pots deserve an extra glance.',
+    }
+  }
+
+  if (flags.rainy && isOutdoorPotStyleSpace(space)) {
+    return {
+      impact: 'Mixed rain and pots',
+      recommendation: 'Eaves and leaves can block some rain — slip a finger in the soil before skipping water.',
+    }
+  }
+
+  if (f?.rainExposed && !flags.rainy && flags.dry && isRaisedOrInGround(space)) {
+    return {
+      impact: 'Dry stretch for beds',
+      recommendation: 'Open soil may need a slower, deeper drink than pots do this week.',
+    }
+  }
+
+  if (isTrellisSpace(space) && flags.windy) {
     return {
       impact: 'Breezy',
       recommendation: 'Watch trellis ties and loose vines this afternoon.',
     }
   }
 
-  if (flags.hot && container) {
+  if (flags.hot && isOutdoorPotStyleSpace(space)) {
     return {
       impact: 'Warm and sunny',
       recommendation: 'Watch direct-sun containers this afternoon.',
     }
   }
 
-  if (isRaisedOrInGround(space)) {
+  if (flags.hot && f?.heatSensitive && f.driesFast) {
     return {
-      impact: 'Mild outdoor stretch',
-      recommendation: 'Raised bed looks stable with mild conditions.',
+      impact: 'Warm day for pots',
+      recommendation: 'Containers heat up fast — a morning soil check saves afternoon surprises.',
     }
   }
 
   return {
     impact: 'Steady outdoors',
-    recommendation: 'A quick walkthrough is enough if moisture looks even.',
+    recommendation:
+      hints?.beginnerRecommendation ?? 'A quick walkthrough is enough if moisture looks even.',
   }
 }
 
@@ -159,15 +271,16 @@ export function buildTodayForecastSpaceChecks(
   weather: GardenWeatherData | null,
 ): TodayForecastSpaceCheck[] {
   const flags = getFlagsFromWeather(weather)
+  const hasForecastPayload = Boolean(weather)
   return spaces.map((space) => {
     const zone = deriveZoneCondition(space)
-    const { impact, recommendation } = buildImpactAndRecommendation(space, flags)
+    const { impact, recommendation } = buildImpactAndRecommendation(space, flags, hasForecastPayload)
     const tone = mapZoneToForecastTone(zone, flags, space)
 
     return {
       id: `forecast-${space.id}`,
       name: space.title,
-      areaTypeLabel: areaTypeLabelFromGroup(space.group),
+      areaTypeLabel: areaTypeLabelForSpace(space),
       condition: conditionLabelFor(zone),
       impactLabel: impact,
       recommendation,

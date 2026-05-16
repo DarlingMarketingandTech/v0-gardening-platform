@@ -35,7 +35,7 @@ export function PlantIssueDetailSheet({ entry, open, onOpenChange, copy, locale 
 
                 <div className="space-y-3">
                   <p className="text-xs font-medium tracking-wide text-primary uppercase">{copy.issueGuide.symptoms}</p>
-                  <ul className="list-inside list-disc space-y-1 text-sm leading-relaxed text-[var(--garden-text)]">
+                  <ul className="list-inside list-disc space-y-1 text-sm leading-relaxed text-(--garden-text)">
                     {entry.symptoms.map((s, i) => (
                       <li key={`sym-${i}`}>{s}</li>
                     ))}
@@ -44,15 +44,15 @@ export function PlantIssueDetailSheet({ entry, open, onOpenChange, copy, locale 
 
                 <div className="space-y-3">
                   <p className="text-xs font-medium tracking-wide text-primary uppercase">{copy.issueGuide.causes}</p>
-                  <ul className="list-inside list-disc space-y-1 text-sm leading-relaxed text-[var(--garden-text)]">
+                  <ul className="list-inside list-disc space-y-1 text-sm leading-relaxed text-(--garden-text)">
                     {entry.causes.map((c, i) => (
                       <li key={`cause-${i}`}>{c}</li>
                     ))}
                   </ul>
                 </div>
 
-                <AppSurface variant="muted" padding="sm" radius="lg" className="border border-dashed border-[var(--garden-border)]">
-                  <p className="text-xs leading-relaxed text-[var(--garden-text-muted)]">
+                <AppSurface variant="muted" padding="sm" radius="lg" className="border border-dashed border-(--garden-border)">
+                  <p className="text-xs leading-relaxed text-(--garden-text-muted)">
                     {copy.issueGuide.offlineNote}
                   </p>
                 </AppSurface>

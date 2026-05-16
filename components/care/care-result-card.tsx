@@ -47,7 +47,7 @@ function TextBlock({ label, body }: { label: string; body?: string }) {
   return (
     <div className="space-y-1">
       <p className="text-xs font-medium tracking-wide text-primary uppercase">{label}</p>
-      <p className="text-sm leading-relaxed text-[var(--garden-text)]">{body}</p>
+      <p className="text-sm leading-relaxed text-(--garden-text)">{body}</p>
     </div>
   )
 }
@@ -85,7 +85,7 @@ export function CareResultCard({ result, locale, className }: CareResultCardProp
               src={imageUrl}
               alt={identity.commonName ?? copy.resultCard.photoAlt}
               size="wide"
-              className="sm:max-w-[12rem]"
+              className="sm:max-w-48"
             />
             <div className="min-w-0 flex-1 space-y-4">
               {confPct != null ? (
@@ -116,40 +116,40 @@ export function CareResultCard({ result, locale, className }: CareResultCardProp
               <dl className="grid gap-2 text-sm">
                 {identity.careDetails.light ? (
                   <div>
-                    <dt className="text-[var(--garden-text-muted)]">{copy.careDetailLabels.light}</dt>
-                    <dd className="text-[var(--garden-text)]">{identity.careDetails.light}</dd>
+                    <dt className="text-(--garden-text-muted)">{copy.careDetailLabels.light}</dt>
+                    <dd className="text-(--garden-text)">{identity.careDetails.light}</dd>
                   </div>
                 ) : null}
                 {identity.careDetails.watering ? (
                   <div>
-                    <dt className="text-[var(--garden-text-muted)]">{copy.careDetailLabels.water}</dt>
-                    <dd className="text-[var(--garden-text)]">{identity.careDetails.watering}</dd>
+                    <dt className="text-(--garden-text-muted)">{copy.careDetailLabels.water}</dt>
+                    <dd className="text-(--garden-text)">{identity.careDetails.watering}</dd>
                   </div>
                 ) : null}
                 {identity.careDetails.soil ? (
                   <div>
-                    <dt className="text-[var(--garden-text-muted)]">{copy.careDetailLabels.soil}</dt>
-                    <dd className="text-[var(--garden-text)]">{identity.careDetails.soil}</dd>
+                    <dt className="text-(--garden-text-muted)">{copy.careDetailLabels.soil}</dt>
+                    <dd className="text-(--garden-text)">{identity.careDetails.soil}</dd>
                   </div>
                 ) : null}
                 {identity.careDetails.temperature ? (
                   <div>
-                    <dt className="text-[var(--garden-text-muted)]">{copy.careDetailLabels.temperature}</dt>
-                    <dd className="text-[var(--garden-text)]">{identity.careDetails.temperature}</dd>
+                    <dt className="text-(--garden-text-muted)">{copy.careDetailLabels.temperature}</dt>
+                    <dd className="text-(--garden-text)">{identity.careDetails.temperature}</dd>
                   </div>
                 ) : null}
                 {identity.careDetails.maintenance ? (
                   <div>
-                    <dt className="text-[var(--garden-text-muted)]">{copy.careDetailLabels.upkeep}</dt>
-                    <dd className="text-[var(--garden-text)]">{identity.careDetails.maintenance}</dd>
+                    <dt className="text-(--garden-text-muted)">{copy.careDetailLabels.upkeep}</dt>
+                    <dd className="text-(--garden-text)">{identity.careDetails.maintenance}</dd>
                   </div>
                 ) : null}
               </dl>
             </AppSurface>
           ) : null}
 
-          <AppSurface variant="muted" padding="sm" radius="lg" className="border-dashed border-[var(--garden-border)]">
-            <p className="text-sm text-[var(--garden-text-muted)]">{copy.sections.saveToGardenSoon}</p>
+          <AppSurface variant="muted" padding="sm" radius="lg" className="border-dashed border-(--garden-border)">
+            <p className="text-sm text-(--garden-text-muted)">{copy.sections.saveToGardenSoon}</p>
             <ActionPill type="button" variant="secondary" size="sm" className="mt-3" disabled>
               {copy.resultCard.saveCta}
             </ActionPill>
@@ -196,7 +196,7 @@ export function CareResultCard({ result, locale, className }: CareResultCardProp
             src={imageUrl}
             alt={issue.issueName ?? copy.resultCard.photoAlt}
             size="wide"
-            className="sm:max-w-[12rem]"
+            className="sm:max-w-48"
           />
           {issueConfPct != null && !healthy ? (
             <div className="min-w-0 flex-1">
@@ -223,7 +223,7 @@ export function CareResultCard({ result, locale, className }: CareResultCardProp
         {issue.preventionTips?.length ? (
           <div className="space-y-2">
             <p className="text-xs font-medium tracking-wide text-primary uppercase">{copy.sections.prevention}</p>
-            <ul className="list-inside list-disc space-y-1 text-sm leading-relaxed text-[var(--garden-text)]">
+            <ul className="list-inside list-disc space-y-1 text-sm leading-relaxed text-(--garden-text)">
               {issue.preventionTips.map((tip, i) => (
                 <li key={`${i}-${tip.slice(0, 24)}`}>{tip}</li>
               ))}
@@ -231,8 +231,8 @@ export function CareResultCard({ result, locale, className }: CareResultCardProp
           </div>
         ) : null}
 
-        <AppSurface variant="muted" padding="sm" radius="lg" className="border-dashed border-[var(--garden-border)]">
-          <p className="text-sm text-[var(--garden-text-muted)]">{copy.sections.saveToGardenSoon}</p>
+        <AppSurface variant="muted" padding="sm" radius="lg" className="border-dashed border-(--garden-border)">
+          <p className="text-sm text-(--garden-text-muted)">{copy.sections.saveToGardenSoon}</p>
           <ActionPill type="button" variant="secondary" size="sm" className="mt-3" disabled>
             {copy.resultCard.saveCta}
           </ActionPill>

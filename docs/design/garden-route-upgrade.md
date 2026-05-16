@@ -40,8 +40,8 @@ Derived in [`map-space-to-zone-card`](/lib/garden-os/mappers/map-space-to-zone-c
 
 | Field | Meaning |
 |-------|---------|
-| `areaTypeLabel` | “Outdoor zone” / “Indoor zone” |
-| `lightExposureLabel` | Parsed from setup wizard description (`Sun/Light is mostly low|mid|high`) or demo keyword heuristics |
+| `areaTypeLabel` | From `space.setupHints.areaTypeLabel` when setup-built; else “Outdoor zone” / “Indoor zone” by group |
+| `lightExposureLabel` | From `setupHints.lightProfile` when present; else parsed from setup description (`Sun/Light is mostly …`) or demo keyword heuristics |
 | `condition` | `stable` \| `needs_water` \| `attention` \| `critical` |
 | `conditionLabel` | User-facing: Stable, Needs water, Needs attention, Needs urgent care |
 | `openTaskCount` | Non-blooming planting rows each count as one gentle check, plus `1` when `weeklyAction` is non-empty |

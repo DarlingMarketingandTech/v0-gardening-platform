@@ -22,6 +22,30 @@ export type DemoGardenSpaceId =
 
 export type DemoGardenSpaceGroup = 'outdoor' | 'indoor'
 
+/** Light / sun level from setup (matches `SunLevel` in `lib/garden-setup/types.ts`). */
+export type GardenSpaceLightProfile = 'low' | 'bright-indirect' | 'mid' | 'high'
+
+/** Forecast-relevant traits derived from setup template + indoor/outdoor mode. */
+export interface GardenSpaceForecastSensitivity {
+  driesFast: boolean
+  rainExposed: boolean
+  heatSensitive: boolean
+  frostSensitive: boolean
+  protectedIndoor: boolean
+}
+
+/**
+ * Structured hints for spaces built from the local setup profile.
+ * Demo catalog spaces omit this; mappers fall back to heuristics on title/description.
+ */
+export interface GardenSpaceSetupHints {
+  templateId: string
+  areaTypeLabel: string
+  lightProfile: GardenSpaceLightProfile
+  forecast: GardenSpaceForecastSensitivity
+  beginnerRecommendation: string
+}
+
 export type DemoGardenPlantingStatus = 'getting-started' | 'growing' | 'ready-soon' | 'blooming'
 
 export interface DemoGardenPlanting {
@@ -42,6 +66,8 @@ export interface DemoGardenSpace {
   watchFor: string
   weeklyAction: string
   plantings: DemoGardenPlanting[]
+  /** Setup-built spaces only — richer labels + forecast behavior without brittle string parsing. */
+  setupHints?: GardenSpaceSetupHints
 }
 
 export const demoGardenSpaces: DemoGardenSpace[] = [

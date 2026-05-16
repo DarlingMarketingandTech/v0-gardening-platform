@@ -58,26 +58,26 @@ export const defaultSetupAnswers = (): SetupAnswers => ({
 })
 
 export const outdoorSpaceOptions: SetupSpaceDraft[] = [
-  { id: 'patio', title: 'Patio or porch pots', templateId: 'patio' },
+  { id: 'patio', title: 'Patio pots', templateId: 'patio' },
   { id: 'raised-bed', title: 'Raised bed', templateId: 'raised' },
+  { id: 'backyard-bed', title: 'Backyard bed', templateId: 'backyard' },
   { id: 'in-ground', title: 'In-ground bed', templateId: 'inground' },
+  { id: 'balcony', title: 'Balcony', templateId: 'balcony' },
+  { id: 'deck-containers', title: 'Deck / porch containers', templateId: 'containers' },
+  { id: 'greenhouse', title: 'Greenhouse', templateId: 'greenhouse' },
   { id: 'pollinator', title: 'Pollinator strip', templateId: 'pollinator' },
 ]
 
 export const indoorSpaceOptions: SetupSpaceDraft[] = [
   { id: 'kitchen-window', title: 'Kitchen window', templateId: 'kitchen' },
-  { id: 'living-shelf', title: 'Living room shelf', templateId: 'living' },
+  { id: 'living-shelf', title: 'Indoor shelf', templateId: 'living' },
   { id: 'bathroom', title: 'Bathroom corner', templateId: 'bath' },
   { id: 'bedroom-sill', title: 'Bedroom windowsill', templateId: 'bedroom' },
 ]
 
 export function buildSetupSteps(answers: SetupAnswers): SetupStep[] {
-  const steps: SetupStep[] = [
-    { id: 'welcome', kind: 'welcome' },
-    { id: 'location', kind: 'location' },
-    { id: 'skill', kind: 'skill' },
-    { id: 'grow-where', kind: 'grow-where' },
-  ]
+  /** V2 order: spaces first, then conditions (location + skill), then rhythm — same fields as before. */
+  const steps: SetupStep[] = [{ id: 'welcome', kind: 'welcome' }, { id: 'grow-where', kind: 'grow-where' }]
 
   if (answers.growsOutdoor) {
     steps.push({ id: 'outdoor-pick', kind: 'outdoor-pick' })
@@ -92,6 +92,8 @@ export function buildSetupSteps(answers: SetupAnswers): SetupStep[] {
       steps.push({ id: `indoor-light-${space.id}`, kind: 'indoor-light', spaceId: space.id })
     }
   }
+
+  steps.push({ id: 'location', kind: 'location' }, { id: 'skill', kind: 'skill' })
 
   steps.push(
     { id: 'notify-topics', kind: 'notify-topics' },
@@ -132,13 +134,13 @@ export function getStepCopy(step: SetupStep, answers: SetupAnswers): { title: st
   switch (step.kind) {
     case 'welcome':
       return {
-        title: 'Welcome — let’s set up your garden notebook.',
-        hint: 'One question at a time. You can go back anytime.',
+        title: 'Welcome — let’s shape your garden notebook.',
+        hint: 'One gentle question at a time. You can go back anytime.',
       }
     case 'location':
       return {
         title: 'Where is your garden?',
-        hint: 'We use this for weather and seasonal timing.',
+        hint: 'We use this for weather and seasonal timing on Today.',
       }
     case 'skill':
       return {
@@ -191,8 +193,8 @@ export function getStepCopy(step: SetupStep, answers: SetupAnswers): { title: st
       }
     case 'summary':
       return {
-        title: 'You’re set up. Here’s your garden at a glance.',
-        hint: 'Tap finish to open My Garden with your spaces.',
+        title: 'You’re set. Here’s what we will open first.',
+        hint: 'Your answers stay on this device until we wire cloud sync — same as before.',
       }
     default:
       return { title: '', hint: '' }

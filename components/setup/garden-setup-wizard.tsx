@@ -3,11 +3,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { ActionPill } from '@/components/garden-ui/action-pill'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Progress } from '@/components/ui/progress'
-import { Leaf, ChevronLeft } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { LightSelector } from '@/components/setup/light-selector'
+import { SetupChoiceGrid } from '@/components/setup/setup-choice-grid'
+import { SetupPreviewCard } from '@/components/setup/setup-preview-card'
+import { SetupProgressRail } from '@/components/setup/setup-progress-rail'
+import { SetupQuestionCard } from '@/components/setup/setup-question-card'
+import { SetupStageHeader } from '@/components/setup/setup-stage-header'
+import { SetupSummaryCard } from '@/components/setup/setup-summary-card'
+import { ZoneTemplateCard } from '@/components/setup/zone-template-card'
 import {
   answersToProfile,
   buildSetupSteps,
@@ -18,8 +24,10 @@ import {
   type SetupAnswers,
   type SetupStep,
 } from '@/lib/garden-setup/questions'
+import { SETUP_STAGES, setupStageForStep } from '@/lib/garden-setup/setup-stages'
 import { saveGardenSetupProfile } from '@/lib/garden-setup/store'
-import type { GardenSkillLevel, NotifyChannel, NotifyFrequency, SunLevel } from '@/lib/garden-setup/types'
+import type { GardenSkillLevel, NotifyChannel, NotifyFrequency } from '@/lib/garden-setup/types'
+import { ChevronLeft, Leaf } from 'lucide-react'
 
 interface GardenSetupWizardProps {
   householdId: string
@@ -42,7 +50,8 @@ export function GardenSetupWizard({ householdId, initialDisplayName }: GardenSet
 
   const step = steps[stepIndex] ?? steps[steps.length - 1]
   const copy = getStepCopy(step, answers)
-  const progress = steps.length > 1 ? ((stepIndex + 1) / steps.length) * 100 : 100
+  const stage = SETUP_STAGES.find((s) => s.id === setupStageForStep(step)) ?? SETUP_STAGES[0]
+  const progress = steps.length > 1 ? (stepIndex + 1) / steps.length : 1
 
   const goNext = () => setStepIndex((i) => Math.min(i + 1, steps.length - 1))
   const goBack = () => setStepIndex((i) => Math.max(i - 1, 0))
@@ -55,34 +64,47 @@ export function GardenSetupWizard({ householdId, initialDisplayName }: GardenSet
   }
 
   const canContinue = validateStep(step, answers)
+  const body = renderStepBody(step, answers, setAnswers, goNext, finish)
 
   return (
-    <div className="min-h-dvh flex flex-col bg-linear-to-b from-primary/5 via-background to-accent/5">
-      <header className="shrink-0 border-b border-primary/10 bg-background/90 backdrop-blur px-4 py-3">
-        <div className="flex items-center gap-2 max-w-lg mx-auto">
-          <Leaf className="h-5 w-5 text-primary shrink-0" />
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-medium text-primary">Garden setup</p>
-            <Progress value={progress} className="h-1.5 mt-1" />
+    <div className="relative flex min-h-dvh flex-col bg-linear-to-b from-[color-mix(in_oklch,var(--garden-primary)_12%,var(--background))] via-background to-[color-mix(in_oklch,var(--garden-primary)_8%,var(--background))]">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top,transparent_0%,color-mix(in_oklch,var(--garden-primary)_6%,transparent)_55%,transparent_72%)]" aria-hidden />
+
+      <header className="relative z-10 shrink-0 border-b border-[color-mix(in_oklch,var(--garden-primary)_18%,var(--garden-border))] bg-background/85 backdrop-blur-md">
+        <div className="mx-auto flex max-w-lg flex-col gap-3 px-4 py-3">
+          <div className="flex items-center gap-2">
+            <Leaf className="size-5 shrink-0 text-primary" aria-hidden />
+            <div className="min-w-0 flex-1">
+              <p className="text-xs font-semibold tracking-wide text-primary uppercase">Garden setup</p>
+              <p className="text-[11px] text-muted-foreground">Guided builder · Momma D&apos;s Garden</p>
+            </div>
+            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+              {stepIndex + 1}/{steps.length}
+            </span>
           </div>
-          <span className="text-xs text-muted-foreground tabular-nums shrink-0">
-            {stepIndex + 1}/{steps.length}
-          </span>
+          <SetupProgressRail activeStage={setupStageForStep(step)} overallFraction={progress} />
         </div>
       </header>
 
-      <main className="flex-1 flex flex-col max-w-lg mx-auto w-full px-4 py-6">
-        <div className="flex-1 flex flex-col justify-center min-h-0">
-          <h1 className="text-xl font-semibold leading-snug text-balance">{copy.title}</h1>
-          <p className="mt-2 text-sm text-muted-foreground leading-relaxed">{copy.hint}</p>
+      <main className="relative z-10 mx-auto flex w-full max-w-lg flex-1 flex-col px-4 py-6">
+        <div className="flex min-h-0 flex-1 flex-col gap-6">
+          <SetupStageHeader stage={stage} stepTitle={copy.title} stepHint={copy.hint} />
 
-          <div className="mt-6 space-y-3">{renderStepBody(step, answers, setAnswers, goNext)}</div>
+          <SetupPreviewCard answers={answers} />
+
+          {step.kind === 'summary' ? (
+            body
+          ) : (
+            <SetupQuestionCard>{body}</SetupQuestionCard>
+          )}
         </div>
+      </main>
 
-        <div className="shrink-0 pt-6 flex gap-2">
+      <footer className="relative z-10 mt-auto shrink-0 border-t border-(--garden-border) bg-background/90 px-4 py-4 backdrop-blur-md">
+        <div className="mx-auto flex max-w-lg gap-2">
           {stepIndex > 0 ? (
-            <Button type="button" variant="outline" className="h-11" onClick={goBack}>
-              <ChevronLeft className="h-4 w-4 mr-1" />
+            <Button type="button" variant="outline" className="h-11 min-w-22" onClick={goBack}>
+              <ChevronLeft className="mr-1 size-4" aria-hidden />
               Back
             </Button>
           ) : (
@@ -91,17 +113,15 @@ export function GardenSetupWizard({ householdId, initialDisplayName }: GardenSet
             </Button>
           )}
 
-          {step.kind === 'summary' ? (
-            <Button type="button" className="h-11 flex-1" onClick={finish}>
-              Open my garden
-            </Button>
-          ) : (
+          {step.kind === 'summary' ? <div className="flex-1" /> : null}
+
+          {step.kind === 'summary' ? null : (
             <Button type="button" className="h-11 flex-1" disabled={!canContinue} onClick={goNext}>
               Continue
             </Button>
           )}
         </div>
-      </main>
+      </footer>
     </div>
   )
 }
@@ -142,12 +162,13 @@ function renderStepBody(
   answers: SetupAnswers,
   setAnswers: React.Dispatch<React.SetStateAction<SetupAnswers>>,
   onAutoAdvance: () => void,
+  onFinish: () => void,
 ) {
   switch (step.kind) {
     case 'welcome':
       return (
         <Input
-          className="h-12 text-base"
+          className="h-12 border border-(--garden-border) bg-(--garden-surface) text-base"
           placeholder="Your first name (optional)"
           value={answers.displayName}
           onChange={(e) => setAnswers((a) => ({ ...a, displayName: e.target.value }))}
@@ -157,7 +178,7 @@ function renderStepBody(
       return (
         <div className="space-y-3">
           <Input
-            className="h-12 text-base"
+            className="h-12 border border-(--garden-border) bg-(--garden-surface) text-base"
             placeholder="City, state — e.g. Raleigh, NC"
             value={answers.locationLabel}
             onChange={(e) => setAnswers((a) => ({ ...a, locationLabel: e.target.value }))}
@@ -179,57 +200,75 @@ function renderStepBody(
       )
     case 'skill':
       return (
-        <ChoiceList
-          options={[
-            { value: 'beginner', label: 'Just getting started', sub: 'I want simple, clear steps.' },
-            { value: 'comfortable', label: 'Some experience', sub: 'I know the basics and keep learning.' },
-            { value: 'confident', label: 'Confident gardener', sub: 'I read the garden and adjust often.' },
-          ]}
-          value={answers.skillLevel}
-          onPick={(v) => {
+        <SetupChoiceGrid
+          mode="single"
+          columns="1"
+          selected={answers.skillLevel}
+          onToggle={(v) => {
             setAnswers((a) => ({ ...a, skillLevel: v as GardenSkillLevel }))
             setTimeout(onAutoAdvance, 180)
           }}
+          options={[
+            { value: 'beginner', label: 'Just getting started', sub: 'Simple, clear steps.' },
+            { value: 'comfortable', label: 'Some experience', sub: 'Basics down — still learning.' },
+            { value: 'confident', label: 'Confident gardener', sub: 'You read the garden and adjust often.' },
+          ]}
         />
       )
-    case 'grow-where':
+    case 'grow-where': {
+      const selected = [...(answers.growsOutdoor ? ['outdoor'] : []), ...(answers.growsIndoor ? ['indoor'] : [])]
       return (
-        <MultiChoice
+        <SetupChoiceGrid
+          mode="multi"
+          columns="1"
+          selected={selected}
+          onToggle={(v) => {
+            setAnswers((a) => {
+              if (v === 'outdoor') {
+                const next = !a.growsOutdoor
+                return { ...a, growsOutdoor: next, outdoorDrafts: next ? a.outdoorDrafts : [] }
+              }
+              if (v === 'indoor') {
+                const next = !a.growsIndoor
+                return { ...a, growsIndoor: next, indoorDrafts: next ? a.indoorDrafts : [] }
+              }
+              return a
+            })
+          }}
           options={[
             { value: 'outdoor', label: 'Outdoor beds & pots' },
             { value: 'indoor', label: 'Indoor plants' },
           ]}
-          selected={[
-            ...(answers.growsOutdoor ? ['outdoor'] : []),
-            ...(answers.growsIndoor ? ['indoor'] : []),
-          ]}
-          onChange={(selected) =>
-            setAnswers((a) => ({
-              ...a,
-              growsOutdoor: selected.includes('outdoor'),
-              growsIndoor: selected.includes('indoor'),
-              outdoorDrafts: selected.includes('outdoor') ? a.outdoorDrafts : [],
-              indoorDrafts: selected.includes('indoor') ? a.indoorDrafts : [],
-            }))
-          }
         />
       )
+    }
     case 'outdoor-pick':
       return (
-        <MultiChoice
-          options={outdoorSpaceOptions.map((o) => ({ value: o.id, label: o.title }))}
-          selected={answers.outdoorDrafts.map((d) => d.id)}
-          onChange={(ids) =>
-            setAnswers((a) => ({
-              ...a,
-              outdoorDrafts: outdoorSpaceOptions.filter((o) => ids.includes(o.id)),
-            }))
-          }
-        />
+        <div className="grid gap-3 sm:grid-cols-2">
+          {outdoorSpaceOptions.map((opt) => (
+            <ZoneTemplateCard
+              key={opt.id}
+              draft={opt}
+              selected={answers.outdoorDrafts.some((d) => d.id === opt.id)}
+              onToggle={() =>
+                setAnswers((a) => {
+                  const has = a.outdoorDrafts.some((d) => d.id === opt.id)
+                  return {
+                    ...a,
+                    outdoorDrafts: has
+                      ? a.outdoorDrafts.filter((d) => d.id !== opt.id)
+                      : [...a.outdoorDrafts, opt],
+                  }
+                })
+              }
+            />
+          ))}
+        </div>
       )
     case 'outdoor-sun':
       return (
-        <SunChoice
+        <LightSelector
+          variant="outdoor-sun"
           value={step.spaceId ? answers.outdoorSun[step.spaceId] : undefined}
           onPick={(level) => {
             if (!step.spaceId) return
@@ -237,26 +276,35 @@ function renderStepBody(
               ...a,
               outdoorSun: { ...a.outdoorSun, [step.spaceId!]: level },
             }))
-            setTimeout(onAutoAdvance, 180)
+            setTimeout(onAutoAdvance, 200)
           }}
         />
       )
     case 'indoor-pick':
       return (
-        <MultiChoice
-          options={indoorSpaceOptions.map((o) => ({ value: o.id, label: o.title }))}
-          selected={answers.indoorDrafts.map((d) => d.id)}
-          onChange={(ids) =>
-            setAnswers((a) => ({
-              ...a,
-              indoorDrafts: indoorSpaceOptions.filter((o) => ids.includes(o.id)),
-            }))
-          }
-        />
+        <div className="grid gap-3 sm:grid-cols-2">
+          {indoorSpaceOptions.map((opt) => (
+            <ZoneTemplateCard
+              key={opt.id}
+              draft={opt}
+              selected={answers.indoorDrafts.some((d) => d.id === opt.id)}
+              onToggle={() =>
+                setAnswers((a) => {
+                  const has = a.indoorDrafts.some((d) => d.id === opt.id)
+                  return {
+                    ...a,
+                    indoorDrafts: has ? a.indoorDrafts.filter((d) => d.id !== opt.id) : [...a.indoorDrafts, opt],
+                  }
+                })
+              }
+            />
+          ))}
+        </div>
       )
     case 'indoor-light':
       return (
-        <SunChoice
+        <LightSelector
+          variant="indoor-light"
           value={step.spaceId ? answers.indoorLight[step.spaceId] : undefined}
           onPick={(level) => {
             if (!step.spaceId) return
@@ -264,151 +312,84 @@ function renderStepBody(
               ...a,
               indoorLight: { ...a.indoorLight, [step.spaceId!]: level },
             }))
-            setTimeout(onAutoAdvance, 180)
+            setTimeout(onAutoAdvance, 200)
           }}
         />
       )
     case 'notify-topics':
       return (
-        <MultiChoice
+        <SetupChoiceGrid
+          mode="multi"
+          columns="1"
+          selected={answers.notifyTopics}
+          onToggle={(topic) =>
+            setAnswers((a) => {
+              const has = a.notifyTopics.includes(topic)
+              return {
+                ...a,
+                notifyTopics: has ? a.notifyTopics.filter((t) => t !== topic) : [...a.notifyTopics, topic],
+              }
+            })
+          }
           options={[
             { value: 'watering', label: 'Watering & dry soil' },
             { value: 'weather', label: 'Weather shifts' },
             { value: 'harvest', label: 'Harvest & ripening' },
             { value: 'pests', label: 'Pests & plant health' },
           ]}
-          selected={answers.notifyTopics}
-          onChange={(topics) => setAnswers((a) => ({ ...a, notifyTopics: topics }))}
         />
       )
     case 'notify-channels':
       return (
-        <MultiChoice
+        <SetupChoiceGrid
+          mode="multi"
+          columns="1"
+          selected={answers.notifyChannels}
+          onToggle={(ch) =>
+            setAnswers((a) => {
+              const has = a.notifyChannels.includes(ch as NotifyChannel)
+              const next = has
+                ? a.notifyChannels.filter((c) => c !== ch)
+                : [...a.notifyChannels, ch as NotifyChannel]
+              return { ...a, notifyChannels: next }
+            })
+          }
           options={[
             { value: 'app', label: 'In the app' },
             { value: 'email', label: 'Email' },
             { value: 'sms', label: 'Text message' },
           ]}
-          selected={answers.notifyChannels}
-          onChange={(channels) =>
-            setAnswers((a) => ({ ...a, notifyChannels: channels as NotifyChannel[] }))
-          }
         />
       )
     case 'notify-frequency':
       return (
-        <ChoiceList
+        <SetupChoiceGrid
+          mode="single"
+          columns="1"
+          selected={answers.notifyFrequency}
+          onToggle={(v) => {
+            setAnswers((a) => ({ ...a, notifyFrequency: v as NotifyFrequency }))
+            setTimeout(onAutoAdvance, 200)
+          }}
           options={[
             { value: 'daily', label: 'Daily digest', sub: 'One calm check-in per day.' },
             { value: 'important', label: 'Important only', sub: 'Only when something needs you.' },
             { value: 'weekly', label: 'Weekly roundup', sub: 'A gentle Sunday-style summary.' },
           ]}
-          value={answers.notifyFrequency}
-          onPick={(v) => {
-            setAnswers((a) => ({ ...a, notifyFrequency: v as NotifyFrequency }))
-            setTimeout(onAutoAdvance, 180)
-          }}
         />
       )
     case 'summary':
       return (
-        <div className="rounded-xl border border-primary/15 bg-card/80 p-4 text-sm space-y-2">
-          <p>
-            <span className="text-muted-foreground">Location:</span> {answers.locationLabel}
-          </p>
-          <p>
-            <span className="text-muted-foreground">Spaces:</span>{' '}
-            {answers.outdoorDrafts.length + answers.indoorDrafts.length} saved
-          </p>
-          <p>
-            <span className="text-muted-foreground">Reminders:</span>{' '}
-            {answers.notifyTopics.join(', ')} via {answers.notifyChannels.join(', ')}
-          </p>
-        </div>
+        <SetupSummaryCard
+          answers={answers}
+          finishAction={
+            <ActionPill type="button" variant="primary" size="lg" className="w-full min-h-11" onClick={onFinish}>
+              Open my garden
+            </ActionPill>
+          }
+        />
       )
     default:
       return null
   }
-}
-
-function ChoiceList({
-  options,
-  value,
-  onPick,
-}: {
-  options: { value: string; label: string; sub?: string }[]
-  value: string | null
-  onPick: (value: string) => void
-}) {
-  return (
-    <div className="space-y-2">
-      {options.map((opt) => (
-        <button
-          key={opt.value}
-          type="button"
-          onClick={() => onPick(opt.value)}
-          className={cn(
-            'w-full rounded-xl border px-4 py-3 text-left transition-colors',
-            value === opt.value
-              ? 'border-primary bg-primary/10'
-              : 'border-border bg-card hover:bg-muted/50',
-          )}
-        >
-          <p className="font-medium text-sm">{opt.label}</p>
-          {opt.sub ? <p className="text-xs text-muted-foreground mt-0.5">{opt.sub}</p> : null}
-        </button>
-      ))}
-    </div>
-  )
-}
-
-function MultiChoice({
-  options,
-  selected,
-  onChange,
-}: {
-  options: { value: string; label: string }[]
-  selected: string[]
-  onChange: (values: string[]) => void
-}) {
-  const toggle = (value: string) => {
-    onChange(selected.includes(value) ? selected.filter((v) => v !== value) : [...selected, value])
-  }
-
-  return (
-    <div className="space-y-2">
-      {options.map((opt) => {
-        const active = selected.includes(opt.value)
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            onClick={() => toggle(opt.value)}
-            className={cn(
-              'w-full rounded-xl border px-4 py-3 text-left text-sm font-medium transition-colors',
-              active ? 'border-primary bg-primary/10' : 'border-border bg-card hover:bg-muted/50',
-            )}
-          >
-            {opt.label}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
-
-function SunChoice({
-  value,
-  onPick,
-}: {
-  value?: SunLevel
-  onPick: (level: SunLevel) => void
-}) {
-  const levels: { value: SunLevel; label: string; sub: string }[] = [
-    { value: 'low', label: 'Low', sub: 'Shade or brief sun' },
-    { value: 'mid', label: 'Medium', sub: 'Several hours of sun' },
-    { value: 'high', label: 'High', sub: 'Full sun most of the day' },
-  ]
-
-  return <ChoiceList options={levels} value={value ?? null} onPick={(v) => onPick(v as SunLevel)} />
 }
