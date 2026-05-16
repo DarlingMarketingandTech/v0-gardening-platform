@@ -1,20 +1,51 @@
 grant usage on schema public to authenticated;
 
-grant select, insert, update, delete
-on table
-  public.profiles,
-  public.households,
-  public.household_members,
-  public.family_invites,
-  public.garden_areas,
-  public.plantings,
-  public.observations,
-  public.care_tasks
-to authenticated;
+-- Table-level grants only when the relation exists (greenfield + late-applied base schema).
+do $$
+declare
+  r record;
+begin
+  for r in
+    select unnest(
+      array[
+        'profiles',
+        'households',
+        'household_members',
+        'family_invites',
+        'garden_areas',
+        'plantings',
+        'observations',
+        'care_tasks'
+      ]::text[]
+    ) as relname
+  loop
+    if exists (
+      select 1
+      from pg_catalog.pg_class c
+      join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+      where n.nspname = 'public'
+        and c.relname = r.relname
+        and c.relkind in ('r', 'p')
+    ) then
+      execute format(
+        'grant select, insert, update, delete on table public.%I to authenticated',
+        r.relname
+      );
+    end if;
+  end loop;
 
-grant select
-on table public.plant_library
-to anon, authenticated;
+  if exists (
+    select 1
+    from pg_catalog.pg_class c
+    join pg_catalog.pg_namespace n on n.oid = c.relnamespace
+    where n.nspname = 'public'
+      and c.relname = 'plant_library'
+      and c.relkind in ('r', 'p')
+  ) then
+    grant select on table public.plant_library to anon, authenticated;
+  end if;
+end
+$$;
 
 do $$
 begin

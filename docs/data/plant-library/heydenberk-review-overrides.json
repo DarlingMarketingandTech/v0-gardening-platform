@@ -1,0 +1,47 @@
+{
+  "beet": {
+    "action": "exclude",
+    "reason": "Species appears to be artichoke (Cynara scolymus), not beet.",
+    "notes": "Needs source JSON correction before any seed import."
+  },
+  "bell-pepper": {
+    "action": "exclude",
+    "reason": "Planting stage duration uses years; inconsistent with typical annual pepper crop modeling.",
+    "notes": "Reconcile plantings timeline or split perennial vs annual guidance."
+  },
+  "chili-pepper": {
+    "action": "exclude",
+    "reason": "Same year-scale planting duration concern as bell pepper.",
+    "notes": "Review before import."
+  },
+  "head-lettuce": {
+    "action": "exclude",
+    "reason": "Year-scale planting duration flagged needs_review for this lettuce entry.",
+    "notes": "Verify against local lettuce production timelines."
+  },
+  "leaf-lettuce": {
+    "action": "exclude",
+    "reason": "Year-scale planting duration flagged needs_review for this lettuce entry.",
+    "notes": "Verify against local lettuce production timelines."
+  },
+  "turnip": {
+    "action": "exclude",
+    "reason": "Year-scale planting duration flagged needs_review for turnip.",
+    "notes": "Likely data error; fix source or accept explicitly in a later override."
+  },
+  "tomato": {
+    "action": "include_with_warning",
+    "reason": "Harvest duration looks suspiciously short, but row is useful for preview seed.",
+    "notes": "Do not expose maturity timing as authoritative in product copy."
+  },
+  "pea": {
+    "action": "exclude",
+    "reason": "Marked low: unknown soilImpact label (source typo heavy giver).",
+    "notes": "Correct soilImpact in source JSON, then remove override or switch to include."
+  },
+  "pole-pea": {
+    "action": "exclude",
+    "reason": "Marked low: same soilImpact typo pattern as pea.json.",
+    "notes": "Correct soilImpact in source JSON before first seed."
+  }
+}

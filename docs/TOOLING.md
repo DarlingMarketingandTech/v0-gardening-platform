@@ -51,5 +51,9 @@ See [`.cursor/mcp.json`](../.cursor/mcp.json) for team-shareable server entries 
 ## Validation
 
 - `npm run verify`
+- Plant library dry-run (Phase 9A, local JSON only): `npm run plant-library:audit:heydenberk` → see `docs/data/plant-library/import-plan.md`
+- Seed candidate list (Phase 9A.1): `npm run plant-library:seed-candidates:heydenberk` (reads preview + `heydenberk-review-overrides.json`)
+- Plant library **preview-branch** seed (Phase 9B, dry-run default): `npm run plant-library:seed:heydenberk` — writes `heydenberk-seed-report.*` under `docs/data/plant-library/`; no Supabase writes unless `--apply`
+- Plant library seed **apply** (preview only — **never** point at production): `npm run plant-library:seed:heydenberk -- --apply --confirm-preview` with `SUPABASE_URL` + `SUPABASE_SERVICE_ROLE_KEY` in local env only; see `import-plan.md` Phase 9B
 - Mobile pass: `/my-garden`, `/setup`
 - Plant ID: keys only on server; UI shows confidence + disclaimer

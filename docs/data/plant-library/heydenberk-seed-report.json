@@ -1,0 +1,39 @@
+{
+  "generatedAt": "2026-05-16T03:31:40.624Z",
+  "mode": "dry-run",
+  "targetHost": null,
+  "totalCandidatesInFile": 31,
+  "approvedForUpsert": 31,
+  "attemptedRows": 31,
+  "chunkSize": 50,
+  "chunksRun": 0,
+  "rowsReturnedFromUpsert": null,
+  "skippedRows": [],
+  "errors": [],
+  "sourceCounts": {
+    "heydenberk/gardening-data": 31
+  },
+  "warningCount": 1,
+  "includedWithWarningKeys": [
+    "tomato"
+  ],
+  "excludedResolutionsCount": 8,
+  "excludedSourceKeysNotSeeded": [
+    "beet",
+    "bell-pepper",
+    "chili-pepper",
+    "head-lettuce",
+    "leaf-lettuce",
+    "pea",
+    "pole-pea",
+    "turnip"
+  ],
+  "excludedRowsConfirmedAbsentFromPayload": true,
+  "noUiChanges": true,
+  "rlsAndReadModelUnchanged": true,
+  "usedServiceRoleFromEnv": false,
+  "notes": [
+    "Production bulk seed is deferred until after human review; Phase 9B targets preview/dev branches only.",
+    "SUPABASE_URL not set — dry-run only (no network)."
+  ]
+}
