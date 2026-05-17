@@ -1,5 +1,9 @@
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
+import { getPublicSupabaseEnv } from '@/lib/env/supabase-public'
+
+const FALLBACK_SUPABASE_URL = 'https://example.com'
+const FALLBACK_SUPABASE_ANON_KEY = 'public-anon-key'
 
 /**
  * Especially important if using Fluid compute: Don't put this client in a
@@ -8,10 +12,11 @@ import { cookies } from 'next/headers'
  */
 export async function createClient() {
   const cookieStore = await cookies()
+  const env = getPublicSupabaseEnv()
 
   return createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    env?.url ?? FALLBACK_SUPABASE_URL,
+    env?.anonKey ?? FALLBACK_SUPABASE_ANON_KEY,
     {
       cookies: {
         getAll() {
