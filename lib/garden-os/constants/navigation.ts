@@ -1,4 +1,4 @@
-import { CalendarDays, HeartPulse, Home, Leaf } from 'lucide-react'
+import { BookOpen, CalendarDays, HeartPulse, Home, Leaf } from 'lucide-react'
 
 export const gardenNavigation = [
   {
@@ -24,6 +24,12 @@ export const gardenNavigation = [
     label: 'Care',
     href: '/my-garden/care',
     icon: HeartPulse,
+  },
+  {
+    id: 'guide',
+    label: 'Guide',
+    href: '/my-garden/guide',
+    icon: BookOpen,
   },
 ] as const
 

@@ -4,6 +4,11 @@
  */
 
 export const HEYDENBERK_SOURCE = "heydenberk/gardening-data" as const
+export const HARVEST_HELPER_SOURCE = "harvest-helper" as const
+
+export type PlantLibrarySource =
+  | typeof HEYDENBERK_SOURCE
+  | typeof HARVEST_HELPER_SOURCE
 
 export type PlantLibrarySourceQuality =
   | "high"
@@ -50,7 +55,7 @@ export interface PlantLibraryImportWarning {
  * Columns compatible with plant_library insert/upsert (excluding id, timestamps).
  */
 export interface PlantLibraryImportRow {
-  source: typeof HEYDENBERK_SOURCE
+  source: PlantLibrarySource
   source_key: string
   common_name: string
   scientific_name: string
@@ -69,7 +74,7 @@ export interface PlantLibraryImportMetadata {
   sourceName: string
   sourceSlug: string
   sourceImageCandidates?: string[]
-  /** Original JSON object as parsed (structured clone via JSON round-trip safe subset). */
+  /** Original record as parsed (structured clone via JSON round-trip safe subset). */
   raw: Record<string, unknown>
   nutritionContent?: Record<string, unknown>
   ediblePartsRaw?: unknown
@@ -100,6 +105,19 @@ export interface PlantLibraryImportPreviewRow {
   blockedFromImport: boolean
   /** True when acceptable for a gated preview-branch seed after Phase 9B checks. */
   safeForPreviewBranchImport: boolean
+}
+
+/** Additional metadata fields present when source is harvest-helper. */
+export interface HarvestHelperImportMetadata extends PlantLibraryImportMetadata {
+  when_to_plant?: string
+  growing_from_seed?: string | null
+  transplanting?: string | null
+  feeding?: string | null
+  other_care?: string | null
+  planting_considerations?: string | null
+  harvesting?: string
+  storage_use?: string | null
+  image?: string | null
 }
 
 export interface PlantLibraryImportAuditSummary {
